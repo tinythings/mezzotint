@@ -19,13 +19,11 @@ pub fn cli(version: &'static str) -> Command {
                 .short('x')
                 .long("exe")
                 .help("Specify path to an executable which needs to be preserved.")
-                .value_delimiter(','),
         )
         .arg(
             Arg::new("profile")
                 .short('p')
                 .long("profile")
-                .action(ArgAction::SetTrue)
                 .help("Profile, describing whole setup"),
         )
         // Other
