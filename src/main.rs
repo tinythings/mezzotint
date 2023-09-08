@@ -29,7 +29,6 @@ fn main() -> Result<(), std::io::Error> {
         return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()));
     }
 
-    let mut es = ElfScanner::new();
     let exe = params.get_one::<String>("exe");
     let profile = params.get_one::<String>("profile");
 
@@ -40,9 +39,14 @@ fn main() -> Result<(), std::io::Error> {
         };
     }
 
-    if exe.is_some() {
-        log::info!("Dependencies:");
-        for d in es.scan(Path::new(exe.unwrap()).to_owned()) {
+    if let Some(exe) = exe {
+        log::info!("Binary dependencies:");
+        for d in ElfScanner::new().scan(Path::new(exe).to_owned()) {
+            log::info!("  - {}", d.to_str().unwrap());
+        }
+
+        log::info!("Package dependencies:");
+        for d in DebPackageScanner::new().scan(Path::new(exe).to_owned()) {
             log::info!("  - {}", d.to_str().unwrap());
         }
     }
