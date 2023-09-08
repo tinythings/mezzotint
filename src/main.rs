@@ -1,7 +1,10 @@
-use std::env;
+use std::{env, path::Path};
+
+use scanner::{binlib::ElfScanner, general::Scanner};
 
 mod clidef;
 mod logger;
+mod scanner;
 
 static VERSION: &str = "0.1";
 static LOGGER: logger::STDOUTLogger = logger::STDOUTLogger;
@@ -24,6 +27,21 @@ fn main() -> Result<(), std::io::Error> {
         .map(|()| log::set_max_level(if params.get_flag("debug") { log::LevelFilter::Trace } else { log::LevelFilter::Info }))
     {
         return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()));
+    }
+
+    let mut es = ElfScanner::new();
+    let exe = params.get_one::<String>("exe");
+    let profile = params.get_one::<String>("profile");
+
+    if exe.is_none() && profile.is_none() {
+        return {
+            cli.print_help().unwrap();
+            Ok(())
+        };
+    }
+
+    if exe.is_some() {
+        es.scan(Path::new(exe.unwrap()).to_owned());
     }
 
     Ok(())
