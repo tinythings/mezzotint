@@ -14,6 +14,20 @@ impl ScannerCommons {
         ScannerCommons { elfrd_paths: vec!["/usr/bin/ldd".to_string(), "/usr/bin/readelf".to_string()], elfrd_p: "".to_string() }
     }
 
+    pub fn call_any(&self, cmd: PathBuf, args: &[String]) -> Result<Vec<String>, Error> {
+        let mut cmd = Command::new(cmd);
+        for arg in args {
+            cmd.arg(arg);
+        }
+
+        let mut data: Vec<String> = vec![];
+        for l in String::from_utf8(cmd.output()?.stdout).unwrap_or_default().lines() {
+            data.push(l.trim().to_owned());
+        }
+
+        Ok(data)
+    }
+
     /// Call either ldd or readelf
     ///
     /// NOTE: Future versions of mezzotint may have own readelf
