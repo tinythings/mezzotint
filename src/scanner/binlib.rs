@@ -1,6 +1,5 @@
-use std::{collections::HashSet, path::PathBuf};
-
 use crate::scanner::general::{Scanner, ScannerCommons};
+use std::{collections::HashSet, path::PathBuf};
 
 pub struct ElfScanner {
     commons: ScannerCommons,

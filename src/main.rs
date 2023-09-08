@@ -1,6 +1,6 @@
-use std::{env, path::Path};
-
+use crate::scanner::debpkg::DebPackageScanner;
 use scanner::{binlib::ElfScanner, general::Scanner};
+use std::{env, path::Path};
 
 mod clidef;
 mod logger;
