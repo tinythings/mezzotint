@@ -41,7 +41,10 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     if exe.is_some() {
-        es.scan(Path::new(exe.unwrap()).to_owned());
+        log::info!("Dependencies:");
+        for d in es.scan(Path::new(exe.unwrap()).to_owned()) {
+            log::info!("  - {}", d.to_str().unwrap());
+        }
     }
 
     Ok(())
