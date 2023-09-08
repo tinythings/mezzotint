@@ -38,7 +38,7 @@ impl ElfScanner {
 impl Scanner for ElfScanner {
     /// Scan for the required dynamic libraries in an executable
     fn scan(&mut self, pth: PathBuf) -> Vec<PathBuf> {
-        log::info!("Scanning for dependencies in {}", pth.to_str().unwrap());
-        self.get_dynlibs(pth.to_str().unwrap().to_string()).iter().map(|p| PathBuf::from(p)).collect::<Vec<PathBuf>>()
+        log::debug!("Scanning for dependencies in {}", pth.to_str().unwrap());
+        self.get_dynlibs(pth.to_str().unwrap().to_string()).iter().map(PathBuf::from).collect::<Vec<PathBuf>>()
     }
 }
