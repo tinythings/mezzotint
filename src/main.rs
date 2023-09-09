@@ -1,8 +1,16 @@
-use crate::scanner::debpkg::DebPackageScanner;
+use crate::{
+    filters::{dirs::PathsDataFilter, intf::DataFilter, texts::TextDataFilter},
+    scanner::debpkg::DebPackageScanner,
+};
 use scanner::{binlib::ElfScanner, general::Scanner};
-use std::{env, path::Path};
+use std::{
+    collections::HashSet,
+    env,
+    path::{Path, PathBuf},
+};
 
 mod clidef;
+mod filters;
 mod logger;
 mod scanner;
 
@@ -40,14 +48,24 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     if let Some(exe) = exe {
-        log::info!("Binary dependencies:");
-        for d in ElfScanner::new().scan(Path::new(exe).to_owned()) {
-            log::info!("  - {}", d.to_str().unwrap());
-        }
+        let mut paths: HashSet<PathBuf> = HashSet::default();
 
-        log::info!("Package dependencies:");
-        for d in DebPackageScanner::new().scan(Path::new(exe).to_owned()) {
-            log::info!("  - {}", d.to_str().unwrap());
+        log::info!("Find binary dependencies");
+        paths.extend(ElfScanner::new().scan(Path::new(exe).to_owned()));
+
+        log::info!("Find package dependencies");
+        paths.extend(DebPackageScanner::new().scan(Path::new(exe).to_owned()));
+
+        log::info!("Filtering satellite data");
+
+        log::info!("Filtered path data:");
+        for p in TextDataFilter::new(PathsDataFilter::new(paths.into_iter().collect::<Vec<PathBuf>>()).filter())
+            .remove_manpages()
+            .remove_docs()
+            .remove_l10n()
+            .filter()
+        {
+            log::info!("  - {}", p.to_str().unwrap());
         }
     }
 
