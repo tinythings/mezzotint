@@ -44,4 +44,7 @@ pub fn cli(version: &'static str) -> Command {
         .disable_version_flag(true)
         .disable_colored_help(false)
         .styles(styles)
+        .after_help("NOTE: This tool is in very early development.
+      If it doesn't work for you, please fill a bug report here:
+      https://github.com/isbm/mezzotint/issues\n".bright_yellow().to_string())
 }
