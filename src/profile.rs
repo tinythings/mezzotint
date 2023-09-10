@@ -57,8 +57,7 @@ impl Profile {
     }
 
     fn parse_profile(&mut self, pfl_path: &Path) -> Result<(), Error> {
-        let yaml = fs::read_to_string(pfl_path)?;
-        let p: PTargets = serde_yaml::from_str::<PTargets>(&yaml).unwrap();
+        let p: PTargets = serde_yaml::from_str::<PTargets>(&fs::read_to_string(pfl_path)?).unwrap();
 
         log::debug!("{:?}", p);
 
