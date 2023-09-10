@@ -1,6 +1,7 @@
 mod clidef;
 mod filters;
 mod logger;
+mod procdata;
 mod profile;
 mod scanner;
 
@@ -14,6 +15,7 @@ use std::{
     collections::HashSet,
     env,
     path::{Path, PathBuf},
+    process,
 };
 
 static VERSION: &str = "0.1";
@@ -40,9 +42,9 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     let exe = params.get_one::<String>("exe");
-    let profile = params.get_one::<String>("profile");
+    let profile_path = params.get_one::<String>("profile");
 
-    if exe.is_none() && profile.is_none() {
+    if exe.is_none() && profile_path.is_none() {
         return {
             cli.print_help().unwrap();
             Ok(())
@@ -69,14 +71,18 @@ fn main() -> Result<(), std::io::Error> {
         {
             log::info!("  - {}", p.to_str().unwrap());
         }
-    } else if let Some(profile) = profile {
-        log::info!("Getting profile for {profile}");
-        match Profile::new(Path::new(profile)) {
-            Ok(_) => {
-                log::info!("process the profile");
+    } else if let Some(profile_path) = profile_path {
+        log::info!("Getting profile at {profile_path}");
+        match Profile::new(Path::new(profile_path)) {
+            Ok(profile) => {
+                if let Err(err) = procdata::TintProcessor::new().set_profile(profile).start() {
+                    log::error!("{}", err);
+                    process::exit(exitcode::IOERR);
+                }
             }
             Err(err) => {
-                log::error!("{err}");
+                log::error!("{}", err);
+                process::exit(exitcode::OSERR);
             }
         }
     }
