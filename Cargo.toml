@@ -16,6 +16,8 @@ clap = { version = "4.3.24", features = [
 ] }
 colored = "2.0.4"
 log = "0.4.20"
+serde = { version = "1.0.188", features = ["derive", "alloc"] }
+serde_yaml = "0.9.25"
 
 [profile.release]
 strip = true
