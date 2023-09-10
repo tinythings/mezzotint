@@ -1,5 +1,12 @@
+mod clidef;
+mod filters;
+mod logger;
+mod profile;
+mod scanner;
+
 use crate::{
     filters::{dirs::PathsDataFilter, intf::DataFilter, texts::TextDataFilter},
+    profile::Profile,
     scanner::debpkg::DebPackageScanner,
 };
 use scanner::{binlib::ElfScanner, general::Scanner};
@@ -8,11 +15,6 @@ use std::{
     env,
     path::{Path, PathBuf},
 };
-
-mod clidef;
-mod filters;
-mod logger;
-mod scanner;
 
 static VERSION: &str = "0.1";
 static LOGGER: logger::STDOUTLogger = logger::STDOUTLogger;
