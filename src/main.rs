@@ -69,6 +69,16 @@ fn main() -> Result<(), std::io::Error> {
         {
             log::info!("  - {}", p.to_str().unwrap());
         }
+    } else if let Some(profile) = profile {
+        log::info!("Getting profile for {profile}");
+        match Profile::new(Path::new(profile)) {
+            Ok(_) => {
+                log::info!("process the profile");
+            }
+            Err(err) => {
+                log::error!("{err}");
+            }
+        }
     }
 
     Ok(())
