@@ -67,6 +67,8 @@ impl ScannerCommons {
                 if l.contains("(NEEDED)") && l.contains(": [") {
                     let l = l.split_once(": [").unwrap().1.trim().trim_end_matches(']');
                     if !l.is_empty() {
+                        // XXX: "readelf" still needs to resolve the absolute paths via ldconf!
+                        //      This still doesn't work properly.
                         libpaths.push(l.to_owned());
                     }
                 }
