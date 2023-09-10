@@ -81,4 +81,9 @@ impl Profile {
 
         Ok(())
     }
+
+    /// Get targets
+    pub fn get_targets(&self) -> &Vec<String> {
+        &self.targets
+    }
 }
