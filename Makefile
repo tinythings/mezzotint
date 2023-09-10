@@ -8,4 +8,4 @@ build:
 	cargo build
 
 man:
-	pandoc --standalone --to man doc/mezzotint.8.md -o doc/mezzotint.8
+	pandoc --standalone --to man doc/manpages/mezzotint.8.md -o doc/manpages/mezzotint.8
