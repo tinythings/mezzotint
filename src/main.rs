@@ -5,18 +5,8 @@ mod procdata;
 mod profile;
 mod scanner;
 
-use crate::{
-    filters::{dirs::PathsDataFilter, intf::DataFilter, texts::TextDataFilter},
-    profile::Profile,
-    scanner::debpkg::DebPackageScanner,
-};
-use scanner::{binlib::ElfScanner, general::Scanner};
-use std::{
-    collections::HashSet,
-    env,
-    path::{Path, PathBuf},
-    process,
-};
+use crate::profile::Profile;
+use std::{env, path::Path, process};
 
 static VERSION: &str = "0.1";
 static LOGGER: logger::STDOUTLogger = logger::STDOUTLogger;
@@ -51,40 +41,35 @@ fn main() -> Result<(), std::io::Error> {
         };
     }
 
+    let mut tint_processor = procdata::TintProcessor::new();
+    let mut profile: Profile = Profile::default();
+
     if let Some(exe) = exe {
-        let mut paths: HashSet<PathBuf> = HashSet::default();
-
-        log::info!("Find binary dependencies");
-        paths.extend(ElfScanner::new().scan(Path::new(exe).to_owned()));
-
-        log::info!("Find package dependencies");
-        paths.extend(DebPackageScanner::new().scan(Path::new(exe).to_owned()));
-
-        log::info!("Filtering satellite data");
-
-        log::info!("Filtered path data:");
-        for p in TextDataFilter::new(PathsDataFilter::new(paths.into_iter().collect::<Vec<PathBuf>>()).filter())
-            .remove_manpages()
-            .remove_docs()
-            .remove_l10n()
-            .filter()
-        {
-            log::info!("  - {}", p.to_str().unwrap());
-        }
+        log::info!("Getting data for the target {exe}");
+        profile
+            .add_target(exe.to_string())
+            .set_manpages(false)
+            .set_dir(false)
+            .set_doc(false)
+            .set_i18n(false)
+            .set_l10n(false)
+            .set_log(false);
     } else if let Some(profile_path) = profile_path {
         log::info!("Getting profile at {profile_path}");
         match Profile::new(Path::new(profile_path)) {
-            Ok(profile) => {
-                if let Err(err) = procdata::TintProcessor::new().set_profile(profile).start() {
-                    log::error!("{}", err);
-                    process::exit(exitcode::IOERR);
-                }
+            Ok(p) => {
+                profile = p;
             }
             Err(err) => {
                 log::error!("{}", err);
                 process::exit(exitcode::OSERR);
             }
         }
+    }
+
+    if let Err(err) = tint_processor.set_profile(profile).start() {
+        log::error!("{}", err);
+        process::exit(exitcode::IOERR);
     }
 
     Ok(())
