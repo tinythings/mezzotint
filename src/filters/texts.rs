@@ -58,11 +58,7 @@ impl DataFilter for TextDataFilter {
         let mut data: Vec<PathBuf> = vec![];
 
         for p in &self.data {
-            if self.filter_manpage(p) {
-                continue;
-            } else if self.filter_docs(p) {
-                continue;
-            } else if self.filter_l10n(p) {
+            if self.filter_manpage(p) || self.filter_docs(p) || self.filter_l10n(p) {
                 continue;
             }
 
