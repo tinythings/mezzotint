@@ -18,12 +18,14 @@ pub fn cli(version: &'static str) -> Command {
             Arg::new("exe")
                 .short('x')
                 .long("exe")
+                .conflicts_with("profile")
                 .help("Specify path to an executable which needs to be preserved.")
         )
         .arg(
             Arg::new("profile")
                 .short('p')
                 .long("profile")
+                .conflicts_with("exe")
                 .help("Profile, describing whole setup"),
         )
         // Other
