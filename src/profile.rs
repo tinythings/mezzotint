@@ -33,7 +33,7 @@ pub struct Profile {
 impl Profile {
     /// Default values for the `Profile` struct.
     /// All data is present by default and is not filtered.
-    fn default() -> Self {
+    pub fn default() -> Self {
         Profile {
             f_l10n: true,
             f_i18n: true,
