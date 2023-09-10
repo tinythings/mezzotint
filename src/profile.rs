@@ -59,7 +59,7 @@ impl Profile {
     fn parse_profile(&mut self, pfl_path: &Path) -> Result<(), Error> {
         let p: PTargets = serde_yaml::from_str::<PTargets>(&fs::read_to_string(pfl_path)?).unwrap();
 
-        log::debug!("{:?}", p);
+        log::trace!("{:?}", p);
 
         for flt in p.config.filters {
             match flt.as_str() {
