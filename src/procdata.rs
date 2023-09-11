@@ -1,6 +1,7 @@
 use std::{
     collections::HashSet,
     io::Error,
+    os::unix,
     path::{Path, PathBuf},
 };
 
@@ -13,11 +14,12 @@ use crate::{
 /// Main processing of profiles or other data
 pub struct TintProcessor {
     profile: Profile,
+    root: PathBuf,
 }
 
 impl TintProcessor {
-    pub fn new() -> Self {
-        TintProcessor { profile: Profile::default() }
+    pub fn new(root: PathBuf) -> Self {
+        TintProcessor { profile: Profile::default(), root }
     }
 
     /// Set configuration from a profile
@@ -26,8 +28,18 @@ impl TintProcessor {
         self
     }
 
+    // Chroot to the mount point
+    fn switch_root(&self) -> Result<(), Error> {
+        unix::fs::chroot(self.root.to_str().unwrap())?;
+        std::env::set_current_dir("/")?;
+
+        Ok(())
+    }
+
     // Start tint processor
     pub fn start(&self) -> Result<(), Error> {
+        self.switch_root()?;
+
         let mut paths: HashSet<PathBuf> = HashSet::default();
 
         for target_path in self.profile.get_targets() {
@@ -36,6 +48,9 @@ impl TintProcessor {
 
             log::debug!("Find package dependencies for {target_path}");
             paths.extend(DebPackageScanner::new().scan(Path::new(target_path).to_owned()));
+
+            // Add the target itself
+            paths.insert(Path::new(target_path).to_owned());
         }
 
         log::debug!("Filtering text data");
