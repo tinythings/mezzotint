@@ -3,12 +3,18 @@ mod filters;
 mod logger;
 mod procdata;
 mod profile;
+mod rootfs;
 mod scanner;
 
-use clap::ArgMatches;
+use clap::{ArgMatches, Command};
+use colored::Colorize;
 
 use crate::profile::Profile;
-use std::{env, path::Path, process};
+use std::{
+    env,
+    path::{Path, PathBuf},
+    process,
+};
 
 static VERSION: &str = "0.1";
 static LOGGER: logger::STDOUTLogger = logger::STDOUTLogger;
@@ -27,45 +33,18 @@ fn is_f(params: &ArgMatches, name: &str) -> bool {
     *params.get_one::<bool>(name).unwrap()
 }
 
-fn main() -> Result<(), std::io::Error> {
-    let args: Vec<String> = env::args().collect();
-    let mut cli = clidef::cli(VERSION);
-
-    if args.len() == 1 {
-        return {
-            cli.print_help().unwrap();
-            Ok(())
-        };
-    }
-
-    let params = cli.to_owned().get_matches();
-
-    // Since --help is disabled on purpose in CLI definition, it is checked manually.
-    if *params.get_one::<bool>("help").unwrap() {
-        cli.print_help().unwrap();
-        return Ok(());
-    }
-
-    // Setup logger
-    if let Err(err) = log::set_logger(&LOGGER)
-        .map(|()| log::set_max_level(if params.get_flag("debug") { log::LevelFilter::Trace } else { log::LevelFilter::Info }))
-    {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()));
-    }
-
+/// Construct profile either from the CLI
+/// or get it from the YAML and configure it.
+fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
     let exe = params.get_one::<String>("exe");
     let profile_path = params.get_one::<String>("profile");
 
     if exe.is_none() && profile_path.is_none() {
-        return {
-            cli.print_help().unwrap();
-            Ok(())
-        };
+        cli.print_help().unwrap();
+        process::exit(exitcode::OK);
     }
 
-    let mut tint_processor = procdata::TintProcessor::new();
     let mut profile: Profile = Profile::default();
-
     if let Some(exe) = exe {
         log::info!("Getting data for the target {exe}");
         profile
@@ -109,7 +88,44 @@ fn main() -> Result<(), std::io::Error> {
         }
     }
 
-    if let Err(err) = tint_processor.set_profile(profile).start() {
+    profile
+}
+
+/// Main
+fn main() -> Result<(), std::io::Error> {
+    let args: Vec<String> = env::args().collect();
+    let mut cli = clidef::cli(VERSION);
+
+    if args.len() == 1 {
+        return {
+            cli.print_help().unwrap();
+            Ok(())
+        };
+    }
+
+    let params = cli.to_owned().get_matches();
+
+    // Since --help is disabled on purpose in CLI definition, it is checked manually.
+    if *params.get_one::<bool>("help").unwrap() {
+        cli.print_help().unwrap();
+        return Ok(());
+    }
+
+    // Setup logger
+    if let Err(err) = log::set_logger(&LOGGER)
+        .map(|()| log::set_max_level(if params.get_flag("debug") { log::LevelFilter::Trace } else { log::LevelFilter::Info }))
+    {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()));
+    }
+
+    // Start data processor
+    let rpth = PathBuf::from(params.get_one::<String>("root").unwrap());
+    if !rpth.exists() {
+        log::error!("Mountpoint \"{}\" does not exist or is not accessible", rpth.to_str().unwrap().bright_yellow());
+        process::exit(exitcode::IOERR);
+    }
+
+    if let Err(err) = procdata::TintProcessor::new(rpth).set_profile(get_profile(cli, &params)).start() {
         log::error!("{}", err);
         process::exit(exitcode::IOERR);
     }
