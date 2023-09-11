@@ -13,20 +13,59 @@ pub fn cli(version: &'static str) -> Command {
     Command::new("mezzotint")
         .version(version)
         .about(format!("{}{} - {}", "mezzo".bold().underline(), "tint", "is a tool to turn your container into an App Bundle"))
+        .override_usage(format!("{} {} {}", "mezzotint".bright_cyan(), "[OPTIONS]".cyan(), "[FILTERS]".cyan()))
         // Config
         .arg(
             Arg::new("exe")
                 .short('x')
                 .long("exe")
+                .conflicts_with("profile")
                 .help("Specify path to an executable which needs to be preserved.")
         )
         .arg(
             Arg::new("profile")
                 .short('p')
                 .long("profile")
-                .help("Profile, describing whole setup"),
+                .conflicts_with("exe")
+                .help("Profile, describing whole setup")
         )
+        .arg(
+            Arg::new("invert-filters")
+                .short('i')
+                .long("invert")
+                .action(clap::ArgAction::SetTrue)
+                .help("Invert filters behaviour")
+        )
+
+        // Filters
+        .next_help_heading("Filters")
+        /*
+        f_prune: Vec<String>
+
+        packages: Vec<String>
+        targets: Vec<String>
+         */
+        .arg(
+            Arg::new("f_l10n").long("l10n").action(clap::ArgAction::SetTrue).help("Leave localisation data")
+        )
+        .arg(
+            Arg::new("f_i18n").long("i18n").action(clap::ArgAction::SetTrue).help("Leave internationalisation data")
+        )
+        .arg(
+            Arg::new("f_doc").long("doc").action(clap::ArgAction::SetTrue).help("Leave documents, texts, licences etc")
+        )
+        .arg(
+            Arg::new("f_man").long("man").action(clap::ArgAction::SetTrue).help("Leave manpages")
+        )
+        .arg(
+            Arg::new("f_dir").long("dirs").action(clap::ArgAction::SetTrue).help("Leave empty directories (except required)")
+        )
+        .arg(
+            Arg::new("f_log").long("logs").action(clap::ArgAction::SetTrue).help("Leave any kind of logs")
+        )
+
         // Other
+        .next_help_heading("Other")
         .arg(
             Arg::new("debug")
                 .short('d')
@@ -35,12 +74,20 @@ pub fn cli(version: &'static str) -> Command {
                 .help("Set debug mode for more verbose output."),
         )
         .arg(
+            Arg::new("help")
+                .short('h')
+                .long("help")
+                .action(ArgAction::SetTrue)
+                .help("Display help"),
+        )
+        .arg(
             Arg::new("version")
                 .short('v')
                 .long("version")
                 .action(ArgAction::SetTrue)
                 .help("Get current version."),
         )
+        .disable_help_flag(true) // Otherwise it is displayed in a wrong position
         .disable_version_flag(true)
         .disable_colored_help(false)
         .styles(styles)

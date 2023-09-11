@@ -15,7 +15,11 @@ clap = { version = "4.3.24", features = [
     "unstable-styles",
 ] }
 colored = "2.0.4"
+exitcode = "1.1.2"
 log = "0.4.20"
+serde = { version = "1.0.188", features = ["derive", "alloc"] }
+serde_yaml = "0.9.25"
+time = "0.3.28"
 
 [profile.release]
 strip = true
