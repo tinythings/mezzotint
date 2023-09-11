@@ -1,18 +1,29 @@
 # List of binary targets those are used
 # as entry points for the bundle apps.
+#
+# Required
+#
 targets:
     - /usr/bin/bash
     - /usr/bin/apt
 
 # List of preserved packages.
+#
+# Optional
+#
 packages:
     - bash
     - apt
 
 # Profile config
+#
+# Optional
+#
 config:
     # List of applied filters. Filter is active
     # if present in this list.
+    #
+    # Optional
     #
     # NOTE: Filters are used to the data what is still left after
     #       the automatic examination.
@@ -39,6 +50,9 @@ config:
 
     # Specific paths that were not automatically detected
     # as not needed. Unix glob is used to be more specific, if needed.
+    #
+    # Optional
+    #
     prune:
         - /usr/share/bug/*
         - /usr/share/lintian/*
