@@ -52,6 +52,10 @@ impl TintProcessor {
             log::debug!("Removing manpages");
             text_filter.remove_manpages();
         }
+        if self.profile.filter_i18n() {
+            log::debug!("Removing internationalisation data");
+            text_filter.remove_i18n();
+        }
 
         let databuf = text_filter.filter();
         paths.clear();

@@ -6,11 +6,12 @@ pub struct TextDataFilter {
     remove_manpages: bool,
     remove_doc_data: bool,
     remove_l10n: bool,
+    remove_i18n: bool,
 }
 
 impl TextDataFilter {
     pub fn new(data: Vec<PathBuf>) -> Self {
-        TextDataFilter { remove_doc_data: false, remove_manpages: false, remove_l10n: false, data }
+        TextDataFilter { remove_doc_data: false, remove_manpages: false, remove_l10n: false, remove_i18n: false, data }
     }
 
     /// Set removal of manpages
@@ -28,6 +29,12 @@ impl TextDataFilter {
     /// Set removal of localisation data
     pub fn remove_l10n(&mut self) -> &mut Self {
         self.remove_l10n = true;
+        self
+    }
+
+    /// Set removal of internationalisation data
+    pub fn remove_i18n(&mut self) -> &mut Self {
+        self.remove_i18n = true;
         self
     }
 
@@ -50,6 +57,11 @@ impl TextDataFilter {
     fn filter_l10n(&self, p: &Path) -> bool {
         self.remove_l10n && p.to_str().unwrap().starts_with("/usr/share/locale")
     }
+
+    /// Is internationalisation
+    fn filter_i18n(&self, p: &Path) -> bool {
+        self.remove_i18n && p.to_str().unwrap().starts_with("/usr/share/i18n")
+    }
 }
 
 impl DataFilter for TextDataFilter {
@@ -58,7 +70,7 @@ impl DataFilter for TextDataFilter {
         let mut data: Vec<PathBuf> = vec![];
 
         for p in &self.data {
-            if self.filter_manpage(p) || self.filter_docs(p) || self.filter_l10n(p) {
+            if self.filter_manpage(p) || self.filter_docs(p) || self.filter_l10n(p) || self.filter_i18n(p) {
                 continue;
             }
 
