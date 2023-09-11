@@ -4,15 +4,15 @@ use std::{fs, io::Error, path::Path};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct PConfig {
-    filters: Vec<String>,
-    prune: Vec<String>,
+    filters: Option<Vec<String>>,
+    prune: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct PTargets {
     targets: Vec<String>,
-    packages: Vec<String>,
-    config: PConfig,
+    packages: Option<Vec<String>>,
+    config: Option<PConfig>,
 }
 
 /// Profile
@@ -61,23 +61,32 @@ impl Profile {
 
         log::trace!("{:?}", p);
 
-        for flt in p.config.filters {
-            match flt.as_str() {
-                "l10n" => self.f_l10n = false,
-                "i18n" => self.f_i18n = false,
-                "doc" => self.f_doc = false,
-                "man" => self.f_man = false,
-                "log" => self.f_log = false,
-                "dir" => self.f_dir = false,
-                unknown => {
-                    log::warn!("Unknown filter: {}", unknown);
+        if let Some(cfg) = p.config {
+            if let Some(af) = cfg.filters {
+                for flt in af {
+                    match flt.as_str() {
+                        "l10n" => self.f_l10n = false,
+                        "i18n" => self.f_i18n = false,
+                        "doc" => self.f_doc = false,
+                        "man" => self.f_man = false,
+                        "log" => self.f_log = false,
+                        "dir" => self.f_dir = false,
+                        unknown => {
+                            log::warn!("Unknown filter: {}", unknown);
+                        }
+                    }
                 }
+            }
+            if let Some(prn) = cfg.prune {
+                self.f_prune.extend(prn);
             }
         }
 
-        self.packages.extend(p.packages);
         self.targets.extend(p.targets);
-        self.f_prune.extend(p.config.prune);
+
+        if let Some(pkgs) = p.packages {
+            self.packages.extend(pkgs);
+        }
 
         Ok(())
     }
