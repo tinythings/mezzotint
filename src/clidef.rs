@@ -27,7 +27,14 @@ pub fn cli(version: &'static str) -> Command {
                 .short('p')
                 .long("profile")
                 .conflicts_with("exe")
-                .help("Profile, describing whole setup"),
+                .help("Profile, describing whole setup")
+        )
+        .arg(
+            Arg::new("invert-filters")
+                .short('i')
+                .long("invert")
+                .action(clap::ArgAction::SetTrue)
+                .help("Invert filters behaviour")
         )
 
         // Filters
@@ -39,22 +46,22 @@ pub fn cli(version: &'static str) -> Command {
         targets: Vec<String>
          */
         .arg(
-            Arg::new("f_l10n").long("l10n").action(clap::ArgAction::SetTrue).help("Filter localisation data")
+            Arg::new("f_l10n").long("l10n").action(clap::ArgAction::SetTrue).help("Leave localisation data")
         )
         .arg(
-            Arg::new("f_i18n").long("i18n").action(clap::ArgAction::SetTrue).help("Filter internationalisation data")
+            Arg::new("f_i18n").long("i18n").action(clap::ArgAction::SetTrue).help("Leave internationalisation data")
         )
         .arg(
-            Arg::new("f_doc").long("doc").action(clap::ArgAction::SetTrue).help("Filter documents, texts, licences etc")
+            Arg::new("f_doc").long("doc").action(clap::ArgAction::SetTrue).help("Leave documents, texts, licences etc")
         )
         .arg(
-            Arg::new("f_man").long("man").action(clap::ArgAction::SetTrue).help("Filter manpages")
+            Arg::new("f_man").long("man").action(clap::ArgAction::SetTrue).help("Leave manpages")
         )
         .arg(
-            Arg::new("f_dir").long("dirs").action(clap::ArgAction::SetTrue).help("Filter empty directories (except required)")
+            Arg::new("f_dir").long("dirs").action(clap::ArgAction::SetTrue).help("Leave empty directories (except required)")
         )
         .arg(
-            Arg::new("f_log").long("logs").action(clap::ArgAction::SetTrue).help("Filter any kind of logs")
+            Arg::new("f_log").long("logs").action(clap::ArgAction::SetTrue).help("Leave any kind of logs")
         )
 
         // Other
