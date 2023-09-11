@@ -5,11 +5,27 @@ mod procdata;
 mod profile;
 mod scanner;
 
+use clap::ArgMatches;
+
 use crate::profile::Profile;
 use std::{env, path::Path, process};
 
 static VERSION: &str = "0.1";
 static LOGGER: logger::STDOUTLogger = logger::STDOUTLogger;
+
+/// Get flag from the params and return inverted if requested
+fn f(params: &ArgMatches, name: &str) -> bool {
+    let p = *params.get_one::<bool>(name).unwrap();
+    if *params.get_one::<bool>("invert-filters").unwrap() {
+        return !p;
+    }
+    p
+}
+
+/// Checks if flag is set at all
+fn is_f(params: &ArgMatches, name: &str) -> bool {
+    *params.get_one::<bool>(name).unwrap()
+}
 
 fn main() -> Result<(), std::io::Error> {
     let args: Vec<String> = env::args().collect();
@@ -54,17 +70,37 @@ fn main() -> Result<(), std::io::Error> {
         log::info!("Getting data for the target {exe}");
         profile
             .add_target(exe.to_string())
-            .set_manpages(false)
-            .set_dir(false)
-            .set_doc(false)
-            .set_i18n(false)
-            .set_l10n(false)
-            .set_log(false);
+            .set_manpages(f(&params, "f_man"))
+            .set_dir(f(&params, "f_dir"))
+            .set_doc(f(&params, "f_doc"))
+            .set_i18n(f(&params, "f_i18n"))
+            .set_l10n(f(&params, "f_l10n"))
+            .set_log(f(&params, "f_log"));
     } else if let Some(profile_path) = profile_path {
         log::info!("Getting profile at {profile_path}");
         match Profile::new(Path::new(profile_path)) {
             Ok(p) => {
                 profile = p;
+
+                // Override profile
+                if is_f(&params, "f_man") {
+                    profile.set_manpages(f(&params, "f_man"));
+                }
+                if is_f(&params, "f_dir") {
+                    profile.set_manpages(f(&params, "f_dir"));
+                }
+                if is_f(&params, "f_doc") {
+                    profile.set_manpages(f(&params, "f_doc"));
+                }
+                if is_f(&params, "f_i18n") {
+                    profile.set_manpages(f(&params, "f_i18n"));
+                }
+                if is_f(&params, "f_l10n") {
+                    profile.set_manpages(f(&params, "f_l10n"));
+                }
+                if is_f(&params, "f_log") {
+                    profile.set_manpages(f(&params, "f_log"));
+                }
             }
             Err(err) => {
                 log::error!("{}", err);
