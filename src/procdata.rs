@@ -8,6 +8,7 @@ use std::{
 use crate::{
     filters::{dirs::PathsDataFilter, intf::DataFilter, texts::TextDataFilter},
     profile::Profile,
+    rootfs,
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, general::Scanner},
 };
 
@@ -83,8 +84,9 @@ impl TintProcessor {
             paths.extend(databuf);
         }
 
-        // XXX temp
-        let mut p = paths.into_iter().collect::<Vec<PathBuf>>();
+        // Scan rootfs
+        log::debug!("Scanning existing rootfs");
+        let mut p = rootfs::RootFS::new().keep_pds(true).keep_tmp(false).dissect(paths.into_iter().collect::<Vec<PathBuf>>());
         p.sort();
         for p in p {
             log::info!("  - {}", p.to_str().unwrap());
