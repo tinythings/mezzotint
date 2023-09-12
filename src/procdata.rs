@@ -86,7 +86,11 @@ impl TintProcessor {
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");
-        let mut p = rootfs::RootFS::new().keep_pds(true).keep_tmp(false).dissect(paths.into_iter().collect::<Vec<PathBuf>>());
+        let mut p = rootfs::RootFS::new()
+            .keep_pds(true)
+            .keep_tmp(false)
+            .keep_tree(vec![])
+            .dissect(paths.into_iter().collect::<Vec<PathBuf>>());
         p.sort();
         for p in p {
             log::info!("  - {}", p.to_str().unwrap());
