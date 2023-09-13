@@ -111,6 +111,11 @@ fn main() -> Result<(), std::io::Error> {
         return Ok(());
     }
 
+    if *params.get_one::<bool>("version").unwrap() {
+        println!("Version {}", VERSION);
+        return Ok(());
+    }
+
     // Setup logger
     if let Err(err) = log::set_logger(&LOGGER)
         .map(|()| log::set_max_level(if params.get_flag("debug") { log::LevelFilter::Trace } else { log::LevelFilter::Info }))

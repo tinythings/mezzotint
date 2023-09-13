@@ -54,7 +54,7 @@ pub fn cli(version: &'static str) -> Command {
             Arg::new("root")
                 .short('r')
                 .long("root")
-                .required(true)
+                .required_unless_present_any(["help", "version"])
                 .help("Root filesystem, e.g. mountpoint of an image")
         )
 
