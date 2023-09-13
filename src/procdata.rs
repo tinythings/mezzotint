@@ -84,6 +84,16 @@ impl TintProcessor {
             paths.extend(databuf);
         }
 
+        // Explicitly keep paths
+        // XXX: Support globbing
+        paths.extend(self.profile.get_keep_paths());
+
+        // Explicitly knock-out paths
+        // XXX: Support globbing
+        for p in self.profile.get_prune_paths() {
+            paths.remove(&p);
+        }
+
         // Scan rootfs
         log::debug!("Scanning existing rootfs");
         let mut p = rootfs::RootFS::new()

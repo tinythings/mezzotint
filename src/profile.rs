@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
+use std::{fmt::Debug, path::PathBuf};
 use std::{fs, io::Error, path::Path};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct PConfig {
     filters: Option<Vec<String>>,
     prune: Option<Vec<String>>,
+    keep: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -24,7 +25,8 @@ pub struct Profile {
     f_man: bool,
     f_dir: bool,
     f_log: bool,
-    f_prune: Vec<String>,
+    f_expl_prune: Vec<PathBuf>,
+    f_expl_keep: Vec<PathBuf>,
 
     packages: Vec<String>,
     targets: Vec<String>,
@@ -43,7 +45,8 @@ impl Profile {
             f_log: true,
             packages: vec![],
             targets: vec![],
-            f_prune: vec![],
+            f_expl_prune: vec![],
+            f_expl_keep: vec![],
         }
     }
 
@@ -77,8 +80,13 @@ impl Profile {
                     }
                 }
             }
+
             if let Some(prn) = cfg.prune {
-                self.f_prune.extend(prn);
+                self.f_expl_prune.extend(prn.iter().map(PathBuf::from).collect::<Vec<PathBuf>>());
+            }
+
+            if let Some(keep) = cfg.keep {
+                self.f_expl_keep.extend(keep.iter().map(PathBuf::from).collect::<Vec<PathBuf>>());
             }
         }
 
@@ -135,9 +143,33 @@ impl Profile {
         self
     }
 
+    /// Add path prune
+    #[allow(dead_code)]
+    pub fn prune_path(&mut self, pth: String) -> &mut Self {
+        self.f_expl_prune.push(PathBuf::from(pth));
+        self
+    }
+
+    /// Add path to be kept
+    #[allow(dead_code)]
+    pub fn keep_path(&mut self, pth: String) -> &mut Self {
+        self.f_expl_keep.push(PathBuf::from(pth));
+        self
+    }
+
     /// Get targets
     pub fn get_targets(&self) -> &Vec<String> {
         &self.targets
+    }
+
+    /// Get paths to be explicitly pruned
+    pub fn get_prune_paths(&self) -> Vec<PathBuf> {
+        self.f_expl_prune.clone()
+    }
+
+    /// Get paths to be explicitly kept
+    pub fn get_keep_paths(&self) -> Vec<PathBuf> {
+        self.f_expl_keep.clone()
     }
 
     /// Returns true if localisation data needs to be removed
