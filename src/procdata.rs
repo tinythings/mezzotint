@@ -1,10 +1,9 @@
 use std::{
     collections::HashSet,
     fs,
-    hash::Hash,
     io::Error,
     os::unix,
-    path::{self, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
 use crate::{
