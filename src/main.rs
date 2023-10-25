@@ -129,8 +129,9 @@ fn main() -> Result<(), std::io::Error> {
         log::error!("Mountpoint \"{}\" does not exist or is not accessible", rpth.to_str().unwrap().bright_yellow());
         process::exit(exitcode::IOERR);
     }
-
-    if let Err(err) = procdata::TintProcessor::new(rpth).set_profile(get_profile(cli, &params)).start() {
+    if let Err(err) =
+        procdata::TintProcessor::new(rpth).set_profile(get_profile(cli, &params)).set_dry_run(params.get_flag("dry-run")).start()
+    {
         log::error!("{}", err);
         process::exit(exitcode::IOERR);
     }
