@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
     vec,
 };
@@ -38,7 +38,13 @@ impl RootFS {
 
     /// Get a list what needs to be deleted from the image
     pub fn dissect(&mut self, src: Vec<PathBuf>) -> Vec<PathBuf> {
-        let mut rfs = self.rootfs.clone();
+        let mut rfs: HashSet<PathBuf> = HashSet::default();
+        for p in &self.rootfs {
+            // Don't throw away ld-linux :)
+            if !p.is_file() || !p.file_name().unwrap().to_str().unwrap().starts_with("ld-linux-") {
+                rfs.insert(p.to_owned());
+            }
+        }
 
         for x in src {
             for y in self.expand_target(x) {
