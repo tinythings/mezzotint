@@ -41,12 +41,46 @@ impl RootFS {
         let mut rfs = self.rootfs.clone();
 
         for x in src {
-            if rfs.contains(&x) {
-                rfs.remove(&x);
+            for y in self.expand_target(x) {
+                rfs.remove(&y);
             }
         }
 
         rfs.into_iter().collect::<Vec<PathBuf>>()
+    }
+
+    /// Expands target taking to the account Linux /bin symlinks to /usr/bin etc.
+    ///
+    /// This is needed as dpkg won't always find the corresponding package, because
+    /// the database still pointing to the old-fashioned location (e.g. "/bin").
+    /// In this case fall-back is used to find also in "/bin/<binary>" if
+    /// search for the "/usr/bin/<binary>" fails.
+    fn expand_target(&self, target: PathBuf) -> Vec<PathBuf> {
+        let mut p = PathBuf::from(&target);
+        let fname = p.file_name().unwrap().to_owned();
+
+        p.pop();
+        let fdir = p.to_str().unwrap();
+
+        let aliases: HashMap<String, String> = HashMap::from([
+            ("/usr/bin/".to_string(), "/bin/".to_string()),
+            ("/usr/sbin/".to_string(), "/sbin/".to_string()),
+            ("/usr/lib/".to_string(), "/lib/".to_string()),
+            ("/usr/lib32/".to_string(), "/lib32/".to_string()),
+            ("/usr/libx32/".to_string(), "/libx32/".to_string()),
+            ("/usr/lib64/".to_string(), "/lib64/".to_string()),
+        ]);
+
+        for (_fd, fl) in aliases {
+            if fdir.starts_with(&fl) {
+                return vec![
+                    PathBuf::from(format!("{}", PathBuf::from(fdir).join(&fname).to_str().unwrap())),
+                    PathBuf::from(format!("{}", PathBuf::from(format!("/usr{}", fdir)).join(fname).to_str().unwrap())),
+                ];
+            }
+        }
+
+        vec![target]
     }
 
     /// Diff the whole rootfs to see what's inside.
