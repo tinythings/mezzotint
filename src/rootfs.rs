@@ -80,8 +80,8 @@ impl RootFS {
         for (_fd, fl) in aliases {
             if fdir.starts_with(&fl) {
                 return vec![
-                    PathBuf::from(format!("{}", PathBuf::from(fdir).join(&fname).to_str().unwrap())),
-                    PathBuf::from(format!("{}", PathBuf::from(format!("/usr{}", fdir)).join(fname).to_str().unwrap())),
+                    PathBuf::from(PathBuf::from(fdir).join(&fname).to_str().unwrap().to_string()),
+                    PathBuf::from(PathBuf::from(format!("/usr{}", fdir)).join(fname).to_str().unwrap().to_string()),
                 ];
             }
         }
