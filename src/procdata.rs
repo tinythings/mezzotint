@@ -1,5 +1,3 @@
-#![allow(clippy::only_used_in_recursion)]
-
 use std::fs::{self};
 use std::{
     collections::HashSet,
@@ -50,7 +48,7 @@ impl TintProcessor {
     }
 
     /// After changes are applied, remove all empty directories
-    fn remove_empty_dirs(&self, p: &PathBuf) -> Result<bool, Error> {
+    fn remove_empty_dirs(p: &PathBuf) -> Result<bool, Error> {
         let mut empty = true;
 
         for e in fs::read_dir(p).unwrap() {
@@ -60,7 +58,7 @@ impl TintProcessor {
             if meta.is_dir() {
                 let sub_p = e.path();
 
-                if self.remove_empty_dirs(&sub_p)? {
+                if TintProcessor::remove_empty_dirs(&sub_p)? {
                     let _ = fs::remove_dir(sub_p);
                 } else {
                     empty = false;
@@ -79,7 +77,7 @@ impl TintProcessor {
             }
         }
 
-        self.remove_empty_dirs(&PathBuf::from("/"))?;
+        TintProcessor::remove_empty_dirs(&PathBuf::from("/"))?;
 
         Ok(())
     }
@@ -100,7 +98,7 @@ impl TintProcessor {
         Ok(())
     }
 
-    fn ext_path(&self, p: HashSet<PathBuf>, mut np: HashSet<PathBuf>) -> HashSet<PathBuf> {
+    fn ext_path(p: HashSet<PathBuf>, mut np: HashSet<PathBuf>) -> HashSet<PathBuf> {
         for tgt in p.iter() {
             if tgt.is_symlink() {
                 let mut n_tgt = fs::read_link(tgt).unwrap();
@@ -108,7 +106,7 @@ impl TintProcessor {
 
                 if !np.contains(&n_tgt) {
                     np.insert(n_tgt);
-                    np.extend(self.ext_path(p.clone(), np.clone()));
+                    np.extend(TintProcessor::ext_path(p.clone(), np.clone()));
                 }
             }
         }
@@ -184,7 +182,7 @@ impl TintProcessor {
             paths.remove(&p);
         }
 
-        paths.extend(self.ext_path(paths.clone(), HashSet::default()));
+        paths.extend(TintProcessor::ext_path(paths.clone(), HashSet::default()));
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");
