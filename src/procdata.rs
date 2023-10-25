@@ -49,6 +49,28 @@ impl TintProcessor {
         Ok(())
     }
 
+    /// After changes are applied, remove all empty directories
+    fn remove_empty_dirs(&self, p: &PathBuf) -> Result<bool, Error> {
+        let mut empty = true;
+
+        for e in fs::read_dir(p).unwrap() {
+            let e = e.unwrap();
+            let meta = e.metadata().unwrap();
+
+            if meta.is_dir() {
+                let sub_p = e.path();
+
+                if self.remove_empty_dirs(&sub_p)? {
+                    fs::remove_dir(sub_p).unwrap();
+                } else {
+                    empty = false;
+                }
+            }
+        }
+
+        Ok(empty)
+    }
+
     /// Remove files from the image
     fn apply_changes(&self, paths: Vec<PathBuf>) -> Result<(), Error> {
         for p in paths {
@@ -56,6 +78,8 @@ impl TintProcessor {
                 log::error!("Unable to remove file {}: {}", p.to_str().unwrap(), err);
             }
         }
+
+        self.remove_empty_dirs(&PathBuf::from("/"))?;
 
         Ok(())
     }
