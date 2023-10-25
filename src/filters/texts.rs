@@ -40,7 +40,7 @@ impl TextDataFilter {
 
     /// If path is a manpage
     fn filter_manpage(&self, p: &Path) -> bool {
-        let mut _p = p.clone().to_path_buf();
+        let mut _p = p.to_path_buf();
         _p.pop();
 
         self.remove_manpages
