@@ -1,8 +1,10 @@
 use std::{
     collections::HashSet,
+    fs,
+    hash::Hash,
     io::Error,
     os::unix,
-    path::{Path, PathBuf},
+    path::{self, Path, PathBuf},
 };
 
 use crate::{
@@ -12,20 +14,29 @@ use crate::{
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, general::Scanner},
 };
 
+use bytesize::ByteSize;
+use filesize::PathExt;
+
 /// Main processing of profiles or other data
 pub struct TintProcessor {
     profile: Profile,
     root: PathBuf,
+    dry_run: bool,
 }
 
 impl TintProcessor {
     pub fn new(root: PathBuf) -> Self {
-        TintProcessor { profile: Profile::default(), root }
+        TintProcessor { profile: Profile::default(), root, dry_run: true }
     }
 
     /// Set configuration from a profile
-    pub fn set_profile(&mut self, profile: Profile) -> &Self {
+    pub fn set_profile(&mut self, profile: Profile) -> &mut Self {
         self.profile = profile;
+        self
+    }
+
+    pub fn set_dry_run(&mut self, dr: bool) -> &mut Self {
+        self.dry_run = dr;
         self
     }
 
@@ -37,10 +48,54 @@ impl TintProcessor {
         Ok(())
     }
 
+    /// Remove files from the image
+    fn apply_changes(&self, paths: Vec<PathBuf>) -> Result<(), Error> {
+        for p in paths {
+            if let Err(err) = fs::remove_file(&p) {
+                log::error!("Unable to remove file {}: {}", p.to_str().unwrap(), err);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Perform only a dry-run
+    fn dry_run(&self, paths: Vec<PathBuf>) -> Result<(), Error> {
+        let mut total_size: u64 = 0;
+        let mut total_files: usize = 0;
+
+        for p in paths {
+            total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
+            total_files += 1;
+            log::info!("  - {}", p.to_str().unwrap());
+        }
+
+        println!("\nTotal files to be removed: {}, disk size freed: {}\n", total_files, ByteSize::b(total_size));
+
+        Ok(())
+    }
+
+    fn ext_path(&self, p: HashSet<PathBuf>, mut np: HashSet<PathBuf>) -> HashSet<PathBuf> {
+        for tgt in p.iter() {
+            if tgt.is_symlink() {
+                let mut n_tgt = fs::read_link(tgt).unwrap();
+                n_tgt = tgt.parent().unwrap().join(&n_tgt);
+
+                if !np.contains(&n_tgt) {
+                    np.insert(n_tgt);
+                    np.extend(self.ext_path(p.clone(), np.clone()));
+                }
+            }
+        }
+
+        np
+    }
+
     // Start tint processor
     pub fn start(&self) -> Result<(), Error> {
         self.switch_root()?;
 
+        // Paths to keep
         let mut paths: HashSet<PathBuf> = HashSet::default();
 
         for target_path in self.profile.get_targets() {
@@ -52,6 +107,16 @@ impl TintProcessor {
 
             // Add the target itself
             paths.insert(Path::new(target_path).to_owned());
+        }
+
+        // Scan content of all profile packages (if any)
+        // and then let TextDataFilter removes what still should be removed.
+        // The idea is to keep parts only relevant to the runtime.
+        log::debug!("Filtering packages");
+        let pscan = DebPackageScanner::new();
+        for p in self.profile.get_packages() {
+            log::debug!("Getting content of package \"{}\"", p);
+            paths.extend(pscan.get_package_contents(p.to_string())?);
         }
 
         log::debug!("Filtering text data");
@@ -94,16 +159,26 @@ impl TintProcessor {
             paths.remove(&p);
         }
 
+        paths.extend(self.ext_path(paths.clone(), HashSet::default()));
+
         // Scan rootfs
         log::debug!("Scanning existing rootfs");
         let mut p = rootfs::RootFS::new()
             .keep_pds(true)
             .keep_tmp(false)
             .keep_tree(vec![])
-            .dissect(paths.into_iter().collect::<Vec<PathBuf>>());
+            .dissect(paths.clone().into_iter().collect::<Vec<PathBuf>>());
         p.sort();
-        for p in p {
-            log::info!("  - {}", p.to_str().unwrap());
+
+        if self.dry_run {
+            self.dry_run(p)?;
+
+            log::info!("Preserve:");
+            for x in paths {
+                log::info!("  + {}", x.to_str().unwrap());
+            }
+        } else {
+            self.apply_changes(p)?;
         }
 
         Ok(())
