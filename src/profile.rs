@@ -203,4 +203,9 @@ impl Profile {
     pub fn filter_doc(&self) -> bool {
         !self.f_doc
     }
+
+    /// Get packages
+    pub fn get_packages(&self) -> &Vec<String> {
+        &self.packages
+    }
 }
