@@ -61,7 +61,7 @@ impl TintProcessor {
                 let sub_p = e.path();
 
                 if self.remove_empty_dirs(&sub_p)? {
-                    fs::remove_dir(sub_p).unwrap();
+                    let _ = fs::remove_dir(sub_p);
                 } else {
                     empty = false;
                 }
