@@ -78,8 +78,8 @@ impl TextDataFilter {
 
         let p = p.to_str().unwrap();
 
-        for c in ["/doc/", "changelog"] {
-            if p.contains(c) {
+        for c in ["/doc/", "changelog", "readme"] {
+            if p.to_lowercase().contains(c) {
                 return true;
             }
         }
@@ -90,7 +90,7 @@ impl TextDataFilter {
             }
         }
 
-        for c in [".txt", ".doc", ".md", ".rtx"] {
+        for c in [".txt", ".doc", ".md", ".rtx", ".htm", ".html"] {
             if p.ends_with(c) {
                 return true;
             }
@@ -133,7 +133,7 @@ impl TextDataFilter {
         }
 
         let p = p.to_str().unwrap();
-        for s in [".jpg", ".jpeg", ".png", ".gif", ".xpm", ".tif", ".tiff"] {
+        for s in [".jpg", ".jpeg", ".png", ".gif", ".xpm", ".tif", ".tiff", ".pbm", ".svg", ".ico"] {
             if p.ends_with(s) {
                 return true;
             }
