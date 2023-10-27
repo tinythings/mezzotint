@@ -25,6 +25,8 @@ pub struct Profile {
     f_man: bool,
     f_dir: bool,
     f_log: bool,
+    f_img: bool,
+    f_arc: bool,
     f_expl_prune: Vec<PathBuf>,
     f_expl_keep: Vec<PathBuf>,
 
@@ -43,6 +45,8 @@ impl Profile {
             f_man: true,
             f_dir: true,
             f_log: true,
+            f_img: true,
+            f_arc: true,
             packages: vec![],
             targets: vec![],
             f_expl_prune: vec![],
@@ -74,6 +78,20 @@ impl Profile {
                         "man" => self.f_man = false,
                         "log" => self.f_log = false,
                         "dir" => self.f_dir = false,
+                        "images" => self.f_img = false,
+                        "archives" => self.f_arc = false,
+
+                        // Filter out everything
+                        "all" => {
+                            self.f_l10n = false;
+                            self.f_i18n = false;
+                            self.f_doc = false;
+                            self.f_man = false;
+                            self.f_log = false;
+                            self.f_dir = false;
+                            self.f_img = false;
+                            self.f_arc = false;
+                        }
                         unknown => {
                             log::warn!("Unknown filter: {}", unknown);
                         }
@@ -133,6 +151,20 @@ impl Profile {
     /// Set directory filter
     pub fn set_dir(&mut self, remove: bool) -> &mut Self {
         self.f_dir = remove;
+        self
+    }
+
+    /// Set images filter
+    #[allow(dead_code)]
+    pub fn set_img(&mut self, remove: bool) -> &mut Self {
+        self.f_img = remove;
+        self
+    }
+
+    /// Set archives filter
+    #[allow(dead_code)]
+    pub fn set_arch(&mut self, remove: bool) -> &mut Self {
+        self.f_arc = remove;
         self
     }
 
@@ -202,6 +234,16 @@ impl Profile {
     /// Returns true if documentation needs to be removed
     pub fn filter_doc(&self) -> bool {
         !self.f_doc
+    }
+
+    /// Returns true if archives needs to be removed
+    pub fn filter_arc(&self) -> bool {
+        !self.f_arc
+    }
+
+    /// Returns true if images/pictures needs to be removed
+    pub fn filter_img(&self) -> bool {
+        !self.f_img
     }
 
     /// Get packages

@@ -160,6 +160,14 @@ impl TintProcessor {
             log::debug!("Removing internationalisation data");
             text_filter.remove_i18n();
         }
+        if self.profile.filter_arc() {
+            log::debug!("Removing archives");
+            text_filter.remove_archives();
+        }
+        if self.profile.filter_img() {
+            log::debug!("Removing images");
+            text_filter.remove_images();
+        }
 
         let databuf = text_filter.filter();
         paths.clear();

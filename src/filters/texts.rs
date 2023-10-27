@@ -7,11 +7,21 @@ pub struct TextDataFilter {
     remove_doc_data: bool,
     remove_l10n: bool,
     remove_i18n: bool,
+    remove_archives: bool,
+    remove_images: bool, // not blobs (qcow2, raw etc) but images, like JPEG, PNG, XPM...
 }
 
 impl TextDataFilter {
     pub fn new(data: Vec<PathBuf>) -> Self {
-        TextDataFilter { remove_doc_data: false, remove_manpages: false, remove_l10n: false, remove_i18n: false, data }
+        TextDataFilter {
+            remove_doc_data: false,
+            remove_manpages: false,
+            remove_l10n: false,
+            remove_i18n: false,
+            remove_archives: false,
+            remove_images: false,
+            data,
+        }
     }
 
     /// Set removal of manpages
@@ -35,6 +45,18 @@ impl TextDataFilter {
     /// Set removal of internationalisation data
     pub fn remove_i18n(&mut self) -> &mut Self {
         self.remove_i18n = true;
+        self
+    }
+
+    /// Set removal of any archives, matching the pattern
+    pub fn remove_archives(&mut self) -> &mut Self {
+        self.remove_archives = true;
+        self
+    }
+
+    /// Set removal of any graphic elements, such as PNG, SVG, XPM etc.
+    pub fn remove_images(&mut self) -> &mut Self {
+        self.remove_images = true;
         self
     }
 
@@ -86,6 +108,39 @@ impl TextDataFilter {
     fn filter_i18n(&self, p: &Path) -> bool {
         self.remove_i18n && p.to_str().unwrap().starts_with("/usr/share/i18n")
     }
+
+    // Is an archive
+    fn filter_archives(&self, p: &Path) -> bool {
+        if !self.remove_archives {
+            return false;
+        }
+
+        let p = p.to_str().unwrap();
+
+        for s in [".gz", ".bz2", ".xz", ".zip", ".tar"] {
+            if p.ends_with(s) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Is an image (picture)
+    fn filter_images(&self, p: &Path) -> bool {
+        if !self.remove_images {
+            return false;
+        }
+
+        let p = p.to_str().unwrap();
+        for s in [".jpg", ".jpeg", ".png", ".gif", ".xpm", ".tif", ".tiff"] {
+            if p.ends_with(s) {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 impl DataFilter for TextDataFilter {
@@ -94,7 +149,13 @@ impl DataFilter for TextDataFilter {
         let mut data: Vec<PathBuf> = vec![];
 
         for p in &self.data {
-            if self.filter_manpage(p) || self.filter_docs(p) || self.filter_l10n(p) || self.filter_i18n(p) {
+            if self.filter_manpage(p)
+                || self.filter_docs(p)
+                || self.filter_l10n(p)
+                || self.filter_i18n(p)
+                || self.filter_archives(p)
+                || self.filter_images(p)
+            {
                 continue;
             }
 
