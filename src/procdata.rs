@@ -1,4 +1,4 @@
-use std::fs::{self};
+use std::fs::{self, canonicalize, remove_file, DirEntry};
 use std::{
     collections::HashSet,
     io::Error,
@@ -47,6 +47,20 @@ impl TintProcessor {
         Ok(())
     }
 
+    /// Swipe for any broken symlinks.
+    fn remove_broken_symlinks(p: &PathBuf) {
+        fs::read_dir(p).unwrap().filter_map(|fe| fe.ok()).collect::<Vec<DirEntry>>().into_iter().for_each(|e| {
+            if e.path().is_symlink() && canonicalize(e.path()).is_err() {
+                log::debug!("Removing broken symlink: {:?}", e.path());
+                let _ = remove_file(e.path());
+            }
+
+            if e.path().is_dir() {
+                TintProcessor::remove_broken_symlinks(&e.path());
+            }
+        });
+    }
+
     /// After changes are applied, remove all empty directories
     fn remove_empty_dirs(p: &PathBuf) -> Result<bool, Error> {
         let mut empty = true;
@@ -59,12 +73,14 @@ impl TintProcessor {
                 let sub_p = e.path();
 
                 if TintProcessor::remove_empty_dirs(&sub_p)? {
-                    let _ = fs::remove_dir(sub_p);
+                    let _ = fs::remove_dir(&sub_p);
                 } else {
                     empty = false;
                 }
             }
         }
+
+        TintProcessor::remove_broken_symlinks(p);
 
         Ok(empty)
     }
