@@ -201,6 +201,9 @@ impl TintProcessor {
             .dissect(paths.clone().into_iter().collect::<Vec<PathBuf>>());
         p.sort();
 
+        let mut paths = paths.into_iter().collect::<Vec<PathBuf>>();
+        paths.sort();
+
         if self.dry_run {
             self.dry_run(p)?;
 
