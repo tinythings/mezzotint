@@ -48,9 +48,33 @@ impl TextDataFilter {
             && _p.file_name().unwrap().to_str().unwrap().starts_with("man")
     }
 
-    /// If path contains "/doc/..."
+    /// If path is a doc
     fn filter_docs(&self, p: &Path) -> bool {
-        self.remove_doc_data && (p.to_str().unwrap().contains("/doc/") || p.to_str().unwrap().starts_with("/usr/share/doc"))
+        if !self.remove_doc_data {
+            return false;
+        }
+
+        let p = p.to_str().unwrap();
+
+        for c in ["/doc/", "changelog"] {
+            if p.contains(c) {
+                return true;
+            }
+        }
+
+        for c in ["/usr/share/doc"] {
+            if p.starts_with(c) {
+                return true;
+            }
+        }
+
+        for c in [".txt", ".doc", ".md", ".rtx"] {
+            if p.ends_with(c) {
+                return true;
+            }
+        }
+
+        false
     }
 
     /// Is localisation
