@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    filters::{dirs::PathsDataFilter, intf::DataFilter, texts::TextDataFilter},
+    filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
     profile::Profile,
     rootfs,
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, general::Scanner},
@@ -176,24 +176,14 @@ impl TintProcessor {
             log::debug!("Removing internationalisation data");
             text_filter.remove_i18n();
         }
-        if self.profile.filter_arc() {
-            log::debug!("Removing archives");
-            text_filter.remove_archives();
-        }
-        if self.profile.filter_img() {
-            log::debug!("Removing images");
-            text_filter.remove_images();
-        }
 
-        let databuf = text_filter.filter();
         paths.clear();
-        paths.extend(databuf);
+        paths.extend(text_filter.filter());
 
         log::debug!("Filtering directories");
         if self.profile.filter_dirs() {
-            let databuf = PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter();
             paths.clear();
-            paths.extend(databuf);
+            paths.extend(PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter());
         }
 
         // Explicitly keep paths
@@ -207,6 +197,22 @@ impl TintProcessor {
         }
 
         paths.extend(TintProcessor::ext_path(paths.clone(), HashSet::default()));
+
+        // Remove resources
+        log::debug!("Filtering resources");
+        let mut rsr_filter = ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>());
+        if self.profile.filter_arc() {
+            log::debug!("Removing archives");
+            rsr_filter.remove_archives();
+        }
+
+        if self.profile.filter_img() {
+            log::debug!("Removing images, pictures, and vector graphics");
+            rsr_filter.remove_images();
+        }
+
+        paths.clear();
+        paths.extend(rsr_filter.filter());
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");
