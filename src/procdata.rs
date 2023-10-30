@@ -181,9 +181,7 @@ impl TintProcessor {
         text_filter.filter(&mut paths);
 
         log::debug!("Filtering directories");
-        if self.profile.filter_dirs() {
-            PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter(&mut paths);
-        }
+        PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.to_owned()).filter(&mut paths);
 
         // Explicitly keep paths
         // XXX: Support globbing
