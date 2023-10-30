@@ -160,25 +160,7 @@ impl TintProcessor {
         }
 
         log::debug!("Filtering text data");
-        let mut text_filter = TextDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>());
-        if self.profile.filter_doc() {
-            log::debug!("Removing docs");
-            text_filter.remove_docs();
-        }
-        if self.profile.filter_l10n() {
-            log::debug!("Removing localisation");
-            text_filter.remove_l10n();
-        }
-        if self.profile.filter_manpages() {
-            log::debug!("Removing manpages");
-            text_filter.remove_manpages();
-        }
-        if self.profile.filter_i18n() {
-            log::debug!("Removing internationalisation data");
-            text_filter.remove_i18n();
-        }
-
-        text_filter.filter(&mut paths);
+        TextDataFilter::new(paths.to_owned(), self.profile.to_owned()).filter(&mut paths);
 
         log::debug!("Filtering directories");
         PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.to_owned()).filter(&mut paths);
@@ -197,7 +179,7 @@ impl TintProcessor {
 
         // Remove resources
         log::debug!("Filtering resources");
-        ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.clone()).filter(&mut paths);
+        ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.to_owned()).filter(&mut paths);
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");

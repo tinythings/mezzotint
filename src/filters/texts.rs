@@ -1,11 +1,11 @@
-use crate::filters::intf::DataFilter;
+use crate::{filters::intf::DataFilter, profile::Profile};
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
 
 pub struct TextDataFilter {
-    data: Vec<PathBuf>,
+    data: HashSet<PathBuf>,
     remove_manpages: bool,
     remove_doc_data: bool,
     remove_l10n: bool,
@@ -13,32 +13,30 @@ pub struct TextDataFilter {
 }
 
 impl TextDataFilter {
-    pub fn new(data: Vec<PathBuf>) -> Self {
-        TextDataFilter { remove_doc_data: false, remove_manpages: false, remove_l10n: false, remove_i18n: false, data }
-    }
+    pub fn new(data: HashSet<PathBuf>, profile: Profile) -> Self {
+        let mut tdf =
+            TextDataFilter { remove_doc_data: false, remove_manpages: false, remove_l10n: false, remove_i18n: false, data };
+        if profile.filter_doc() {
+            log::debug!("Removing docs");
+            tdf.remove_doc_data = true;
+        }
 
-    /// Set removal of manpages
-    pub fn remove_manpages(&mut self) -> &mut Self {
-        self.remove_manpages = true;
-        self
-    }
+        if profile.filter_manpages() {
+            log::debug!("Removing manpages");
+            tdf.remove_manpages = true;
+        }
 
-    /// Set removal of documentation (common patterns)
-    pub fn remove_docs(&mut self) -> &mut Self {
-        self.remove_doc_data = true;
-        self
-    }
+        if profile.filter_l10n() {
+            log::debug!("Removing localisation");
+            tdf.remove_l10n = true;
+        }
 
-    /// Set removal of localisation data
-    pub fn remove_l10n(&mut self) -> &mut Self {
-        self.remove_l10n = true;
-        self
-    }
+        if profile.filter_i18n() {
+            log::debug!("Removing internationalisation data");
+            tdf.remove_i18n = true;
+        }
 
-    /// Set removal of internationalisation data
-    pub fn remove_i18n(&mut self) -> &mut Self {
-        self.remove_i18n = true;
-        self
+        tdf
     }
 
     /// If path is a manpage
