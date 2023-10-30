@@ -49,7 +49,7 @@ impl ResourcesDataFilter {
         }
 
         let p = p.to_str().unwrap();
-        for s in [".jpg", ".jpeg", ".png", ".gif", ".xpm", ".tif", ".tiff", ".pbm", ".svg", ".ico"] {
+        for s in [".bmp", ".jpg", ".jpeg", ".png", ".gif", ".xpm", ".tif", ".tiff", ".pbm", ".svg", ".ico"] {
             if p.ends_with(s) {
                 return true;
             }
