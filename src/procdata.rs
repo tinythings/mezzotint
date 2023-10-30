@@ -177,13 +177,15 @@ impl TintProcessor {
             text_filter.remove_i18n();
         }
 
+        let databuf = text_filter.filter();
         paths.clear();
-        paths.extend(text_filter.filter());
+        paths.extend(databuf);
 
         log::debug!("Filtering directories");
         if self.profile.filter_dirs() {
+            let databuf = PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter();
             paths.clear();
-            paths.extend(PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter());
+            paths.extend(databuf);
         }
 
         // Explicitly keep paths
