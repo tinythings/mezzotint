@@ -1,5 +1,5 @@
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 pub trait DataFilter {
-    fn filter(&self) -> Vec<PathBuf>;
+    fn filter(&self, data: &mut HashSet<PathBuf>);
 }

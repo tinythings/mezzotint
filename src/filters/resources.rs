@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
 use super::intf::DataFilter;
 
@@ -60,16 +63,16 @@ impl ResourcesDataFilter {
 }
 
 impl DataFilter for ResourcesDataFilter {
-    fn filter(&self) -> Vec<PathBuf> {
-        let mut data: Vec<PathBuf> = Vec::default();
-
+    fn filter(&self, data: &mut HashSet<PathBuf>) {
+        let mut out: Vec<PathBuf> = Vec::default();
         for p in &self.data {
             if self.filter_archives(p) || self.filter_images(p) {
                 continue;
             }
-            data.push(p.to_owned());
+            out.push(p.to_owned());
         }
 
-        data
+        data.clear();
+        data.extend(out);
     }
 }

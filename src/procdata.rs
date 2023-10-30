@@ -177,15 +177,11 @@ impl TintProcessor {
             text_filter.remove_i18n();
         }
 
-        let databuf = text_filter.filter();
-        paths.clear();
-        paths.extend(databuf);
+        text_filter.filter(&mut paths);
 
         log::debug!("Filtering directories");
         if self.profile.filter_dirs() {
-            let databuf = PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter();
-            paths.clear();
-            paths.extend(databuf);
+            PathsDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>()).filter(&mut paths);
         }
 
         // Explicitly keep paths
@@ -213,8 +209,7 @@ impl TintProcessor {
             rsr_filter.remove_images();
         }
 
-        paths.clear();
-        paths.extend(rsr_filter.filter());
+        rsr_filter.filter(&mut paths);
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");

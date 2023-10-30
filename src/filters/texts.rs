@@ -1,5 +1,8 @@
 use crate::filters::intf::DataFilter;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
 pub struct TextDataFilter {
     data: Vec<PathBuf>,
@@ -90,17 +93,18 @@ impl TextDataFilter {
 
 impl DataFilter for TextDataFilter {
     /// Filter out text data: manpages, documentation, licensing, localisation etc.
-    fn filter(&self) -> Vec<PathBuf> {
-        let mut data: Vec<PathBuf> = vec![];
+    fn filter(&self, data: &mut HashSet<PathBuf>) {
+        let mut out: Vec<PathBuf> = vec![];
 
         for p in &self.data {
             if self.filter_manpage(p) || self.filter_docs(p) || self.filter_l10n(p) || self.filter_i18n(p) {
                 continue;
             }
 
-            data.push(p.to_owned());
+            out.push(p.to_owned());
         }
 
-        data
+        data.clear();
+        data.extend(out);
     }
 }
