@@ -17,6 +17,7 @@ use bytesize::ByteSize;
 use filesize::PathExt;
 
 /// Main processing of profiles or other data
+#[derive(Clone)]
 pub struct TintProcessor {
     profile: Profile,
     root: PathBuf,
@@ -198,18 +199,7 @@ impl TintProcessor {
 
         // Remove resources
         log::debug!("Filtering resources");
-        let mut rsr_filter = ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>());
-        if self.profile.filter_arc() {
-            log::debug!("Removing archives");
-            rsr_filter.remove_archives();
-        }
-
-        if self.profile.filter_img() {
-            log::debug!("Removing images, pictures, and vector graphics");
-            rsr_filter.remove_images();
-        }
-
-        rsr_filter.filter(&mut paths);
+        ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.clone()).filter(&mut paths);
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");

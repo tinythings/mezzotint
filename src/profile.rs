@@ -17,7 +17,7 @@ pub struct PTargets {
 }
 
 /// Profile
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Profile {
     f_l10n: bool,
     f_i18n: bool,

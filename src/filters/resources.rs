@@ -3,6 +3,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::profile::Profile;
+
 use super::intf::DataFilter;
 
 pub struct ResourcesDataFilter {
@@ -12,20 +14,19 @@ pub struct ResourcesDataFilter {
 }
 
 impl ResourcesDataFilter {
-    pub fn new(data: Vec<PathBuf>) -> Self {
-        ResourcesDataFilter { data, remove_archives: false, remove_images: false }
-    }
+    pub fn new(data: Vec<PathBuf>, profile: Profile) -> Self {
+        let mut rdf = ResourcesDataFilter { data, remove_archives: false, remove_images: false };
+        if profile.filter_arc() {
+            log::debug!("Removing archives");
+            rdf.remove_archives = true;
+        }
 
-    /// Set removal of any archives, matching the pattern
-    pub fn remove_archives(&mut self) -> &mut Self {
-        self.remove_archives = true;
-        self
-    }
+        if profile.filter_img() {
+            log::debug!("Removing images, pictures, and vector graphics");
+            rdf.remove_images = true;
+        }
 
-    /// Set removal of any graphic elements, such as PNG, SVG, XPM etc.
-    pub fn remove_images(&mut self) -> &mut Self {
-        self.remove_images = true;
-        self
+        rdf
     }
 
     // Is an archive
