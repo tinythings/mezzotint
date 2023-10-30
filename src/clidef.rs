@@ -20,7 +20,7 @@ pub fn cli(version: &'static str) -> Command {
                 .short('x')
                 .long("exe")
                 .conflicts_with("profile")
-                .help("Specify path to an executable which needs to be preserved.")
+                .help("Specify path to an executable which needs to be preserved")
         )
         .arg(
             Arg::new("profile")
@@ -30,21 +30,36 @@ pub fn cli(version: &'static str) -> Command {
                 .help("Profile, describing whole setup")
         )
         .arg(
+            Arg::new("packages")
+                .short('k')
+                .long("pkgs")
+                .aliases(["packages", "packags", "packs"])
+                .help("Comma-separated list of packages to account")
+        )
+        .arg(
             Arg::new("invert-filters")
                 .short('i')
                 .long("invert")
                 .action(clap::ArgAction::SetTrue)
                 .help("Invert filters behaviour")
         )
+        .arg(
+            Arg::new("dry-run")
+                .short('t')
+                .long("dry-run")
+                .action(clap::ArgAction::SetTrue)
+                .help("Do not remove anything, only display what will be removed")
+        )
+        .arg(
+            Arg::new("root")
+                .short('r')
+                .long("root")
+                .required_unless_present_any(["help", "version"])
+                .help("Root filesystem, e.g. mountpoint of an image")
+        )
 
         // Filters
         .next_help_heading("Filters")
-        /*
-        f_prune: Vec<String>
-
-        packages: Vec<String>
-        targets: Vec<String>
-         */
         .arg(
             Arg::new("f_l10n").long("l10n").action(clap::ArgAction::SetTrue).help("Leave localisation data")
         )

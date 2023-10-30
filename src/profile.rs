@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
+use std::{fmt::Debug, path::PathBuf};
 use std::{fs, io::Error, path::Path};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct PConfig {
     filters: Option<Vec<String>>,
     prune: Option<Vec<String>>,
+    keep: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -16,7 +17,7 @@ pub struct PTargets {
 }
 
 /// Profile
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Profile {
     f_l10n: bool,
     f_i18n: bool,
@@ -24,7 +25,10 @@ pub struct Profile {
     f_man: bool,
     f_dir: bool,
     f_log: bool,
-    f_prune: Vec<String>,
+    f_img: bool,
+    f_arc: bool,
+    f_expl_prune: Vec<PathBuf>,
+    f_expl_keep: Vec<PathBuf>,
 
     packages: Vec<String>,
     targets: Vec<String>,
@@ -41,9 +45,12 @@ impl Profile {
             f_man: true,
             f_dir: true,
             f_log: true,
+            f_img: true,
+            f_arc: true,
             packages: vec![],
             targets: vec![],
-            f_prune: vec![],
+            f_expl_prune: vec![],
+            f_expl_keep: vec![],
         }
     }
 
@@ -71,14 +78,33 @@ impl Profile {
                         "man" => self.f_man = false,
                         "log" => self.f_log = false,
                         "dir" => self.f_dir = false,
+                        "images" => self.f_img = false,
+                        "archives" => self.f_arc = false,
+
+                        // Filter out everything
+                        "all" => {
+                            self.f_l10n = false;
+                            self.f_i18n = false;
+                            self.f_doc = false;
+                            self.f_man = false;
+                            self.f_log = false;
+                            self.f_dir = false;
+                            self.f_img = false;
+                            self.f_arc = false;
+                        }
                         unknown => {
                             log::warn!("Unknown filter: {}", unknown);
                         }
                     }
                 }
             }
+
             if let Some(prn) = cfg.prune {
-                self.f_prune.extend(prn);
+                self.f_expl_prune.extend(prn.iter().map(PathBuf::from).collect::<Vec<PathBuf>>());
+            }
+
+            if let Some(keep) = cfg.keep {
+                self.f_expl_keep.extend(keep.iter().map(PathBuf::from).collect::<Vec<PathBuf>>());
             }
         }
 
@@ -128,6 +154,20 @@ impl Profile {
         self
     }
 
+    /// Set images filter
+    #[allow(dead_code)]
+    pub fn set_img(&mut self, remove: bool) -> &mut Self {
+        self.f_img = remove;
+        self
+    }
+
+    /// Set archives filter
+    #[allow(dead_code)]
+    pub fn set_arch(&mut self, remove: bool) -> &mut Self {
+        self.f_arc = remove;
+        self
+    }
+
     /// Set logs filter
     #[allow(dead_code)]
     pub fn set_log(&mut self, remove: bool) -> &mut Self {
@@ -135,9 +175,33 @@ impl Profile {
         self
     }
 
+    /// Add path prune
+    #[allow(dead_code)]
+    pub fn prune_path(&mut self, pth: String) -> &mut Self {
+        self.f_expl_prune.push(PathBuf::from(pth));
+        self
+    }
+
+    /// Add path to be kept
+    #[allow(dead_code)]
+    pub fn keep_path(&mut self, pth: String) -> &mut Self {
+        self.f_expl_keep.push(PathBuf::from(pth));
+        self
+    }
+
     /// Get targets
     pub fn get_targets(&self) -> &Vec<String> {
         &self.targets
+    }
+
+    /// Get paths to be explicitly pruned
+    pub fn get_prune_paths(&self) -> Vec<PathBuf> {
+        self.f_expl_prune.clone()
+    }
+
+    /// Get paths to be explicitly kept
+    pub fn get_keep_paths(&self) -> Vec<PathBuf> {
+        self.f_expl_keep.clone()
     }
 
     /// Returns true if localisation data needs to be removed
@@ -170,5 +234,20 @@ impl Profile {
     /// Returns true if documentation needs to be removed
     pub fn filter_doc(&self) -> bool {
         !self.f_doc
+    }
+
+    /// Returns true if archives needs to be removed
+    pub fn filter_arc(&self) -> bool {
+        !self.f_arc
+    }
+
+    /// Returns true if images/pictures needs to be removed
+    pub fn filter_img(&self) -> bool {
+        !self.f_img
+    }
+
+    /// Get packages
+    pub fn get_packages(&self) -> &Vec<String> {
+        &self.packages
     }
 }

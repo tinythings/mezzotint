@@ -48,4 +48,7 @@ config:
     prune:
         - /usr/share/bug/*
         - /usr/share/lintian/*
+
+    keep:
+        - /etc/*
 ```
