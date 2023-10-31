@@ -54,7 +54,9 @@ fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
             .set_doc(f(params, "f_doc"))
             .set_i18n(f(params, "f_i18n"))
             .set_l10n(f(params, "f_l10n"))
-            .set_log(f(params, "f_log"));
+            .set_log(f(params, "f_log"))
+            .set_arch(f(params, "f_arc"))
+            .set_img(f(params, "f_pic"));
     } else if let Some(profile_path) = profile_path {
         log::info!("Getting profile at {profile_path}");
         match Profile::new(Path::new(profile_path)) {
@@ -79,6 +81,12 @@ fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
                 }
                 if is_f(params, "f_log") {
                     profile.set_manpages(f(params, "f_log"));
+                }
+                if is_f(params, "f_pic") {
+                    profile.set_img(f(params, "f_pic"));
+                }
+                if is_f(params, "f_arc") {
+                    profile.set_arch(f(params, "f_arc"));
                 }
             }
             Err(err) => {
