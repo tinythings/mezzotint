@@ -1,4 +1,8 @@
-use crate::scanner::general::{Scanner, ScannerCommons};
+use crate::scanner::{
+    general::{Scanner, ScannerCommons},
+    tracedeb,
+    traceitf::PkgDepTrace,
+};
 use std::{
     io::{Error, ErrorKind},
     path::PathBuf,
