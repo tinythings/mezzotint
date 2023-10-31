@@ -137,11 +137,20 @@ fn main() -> Result<(), std::io::Error> {
         log::error!("Mountpoint \"{}\" does not exist or is not accessible", rpth.to_str().unwrap().bright_yellow());
         process::exit(exitcode::IOERR);
     }
+
+    log::info!("Launching scanner and data processor");
+
     if let Err(err) =
         procdata::TintProcessor::new(rpth).set_profile(get_profile(cli, &params)).set_dry_run(params.get_flag("dry-run")).start()
     {
         log::error!("{}", err);
         process::exit(exitcode::IOERR);
+    }
+
+    if params.get_flag("dry-run") {
+        log::warn!("This was a dry-run. Changes were not applied.");
+    } else {
+        log::info!("Finished. Hopefully it even works :-)");
     }
 
     Ok(())
