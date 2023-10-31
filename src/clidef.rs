@@ -51,6 +51,14 @@ pub fn cli(version: &'static str) -> Command {
                 .help("Do not remove anything, only display what will be removed")
         )
         .arg(
+            Arg::new("inspect")
+                .short('s')
+                .long("inspect")
+                .action(clap::ArgAction::SetTrue)
+                .help("Inspect a container to generate a possible profile")
+                .conflicts_with_all(["dry-run", "profile"])
+        )
+        .arg(
             Arg::new("root")
                 .short('r')
                 .long("root")
