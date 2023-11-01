@@ -210,8 +210,26 @@ impl TintProcessor {
             self.dry_run(p)?;
 
             log::info!("Preserve:");
-            for x in paths {
-                log::info!("  + {}", x.to_str().unwrap());
+            for p in paths {
+                if p.is_dir() {
+                    println!("{}", p.to_str().unwrap().bright_blue().bold());
+                }
+
+                if p.is_symlink() {
+                    println!(
+                        "{} -> {}",
+                        p.to_str().unwrap().bright_cyan(),
+                        p.read_link().unwrap().as_path().to_str().unwrap().blue()
+                    );
+                }
+
+                if p.is_file() {
+                    if p.metadata().unwrap().permissions().mode() & 0o111 != 0 {
+                        println!("{}", format!("*{}", p.to_str().unwrap()).bright_green());
+                    } else {
+                        println!("{}", p.to_str().unwrap());
+                    }
+                }
             }
         } else {
             self.apply_changes(p)?;
