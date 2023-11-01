@@ -2,15 +2,13 @@
 Data lister (fancy STDOUT printer)
 */
 
+use crate::filters::defs::{self};
+use bytesize::ByteSize;
+use colored::Colorize;
 use std::{
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
 };
-
-use bytesize::ByteSize;
-use colored::Colorize;
-
-use crate::filters::defs::{self};
 
 /// ContentFormatter is a lister for finally gathered information,
 /// that needs to be displayed on the screen for the user for review

@@ -1,11 +1,9 @@
+use super::{defs, intf::DataFilter};
+use crate::profile::Profile;
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
-
-use crate::profile::Profile;
-
-use super::{defs, intf::DataFilter};
 
 pub struct ResourcesDataFilter {
     data: Vec<PathBuf>,

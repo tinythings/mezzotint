@@ -1,6 +1,5 @@
-use std::{collections::HashSet, process::Command};
-
 use super::traceitf::PkgDepTrace;
+use std::{collections::HashSet, process::Command};
 
 pub struct DebPackageTrace {
     data: HashSet<String>,

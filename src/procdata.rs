@@ -1,3 +1,11 @@
+use crate::{
+    filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
+    profile::Profile,
+    rootfs,
+    scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
+};
+use bytesize::ByteSize;
+use filesize::PathExt;
 use std::fs::{self, canonicalize, remove_file, DirEntry};
 use std::{
     collections::HashSet,
@@ -5,16 +13,6 @@ use std::{
     os::unix,
     path::{Path, PathBuf},
 };
-
-use crate::{
-    filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
-    profile::Profile,
-    rootfs,
-    scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
-};
-
-use bytesize::ByteSize;
-use filesize::PathExt;
 
 /// Main processing of profiles or other data
 #[derive(Clone)]

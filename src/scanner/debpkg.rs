@@ -1,10 +1,9 @@
-use colored::Colorize;
-
 use crate::scanner::{
     general::{Scanner, ScannerCommons},
     tracedeb,
     traceitf::PkgDepTrace,
 };
+use colored::Colorize;
 use std::{
     io::{Error, ErrorKind},
     path::PathBuf,

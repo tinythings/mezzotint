@@ -5,11 +5,9 @@ mod procdata;
 mod profile;
 mod rootfs;
 mod scanner;
-
+use crate::profile::Profile;
 use clap::{ArgMatches, Command};
 use colored::Colorize;
-
-use crate::profile::Profile;
 use std::{
     env,
     path::{Path, PathBuf},
