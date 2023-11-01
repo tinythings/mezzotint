@@ -1,4 +1,9 @@
-use crate::scanner::general::{Scanner, ScannerCommons};
+use crate::scanner::{
+    general::{Scanner, ScannerCommons},
+    tracedeb,
+    traceitf::PkgDepTrace,
+};
+use colored::Colorize;
 use std::{
     io::{Error, ErrorKind},
     path::PathBuf,
@@ -8,12 +13,13 @@ use std::{
 /// a target belongs to.
 pub struct DebPackageScanner {
     commons: ScannerCommons,
+    autodeps: bool,
 }
 
 impl DebPackageScanner {
     /// Constructor
-    pub fn new() -> Self {
-        DebPackageScanner { commons: ScannerCommons::new() }
+    pub fn new(autodeps: bool) -> Self {
+        DebPackageScanner { commons: ScannerCommons::new(), autodeps }
     }
 
     /// Expands target taking to the account Linux /bin symlinks to /usr/bin etc.
@@ -84,20 +90,38 @@ impl DebPackageScanner {
 impl Scanner for DebPackageScanner {
     fn scan(&mut self, pth: PathBuf) -> Vec<PathBuf> {
         log::debug!("Scanning package contents for {:?}", pth.to_str());
+
+        let mut out: Vec<PathBuf> = vec![];
         let pkgname = self.get_package_for(pth.to_str().unwrap().to_string());
 
         if let Ok(Some(pkgname)) = pkgname {
             log::debug!("{} corresponds to {}", pth.to_str().unwrap(), pkgname);
-            match self.get_package_contents(pkgname) {
+
+            match self.get_package_contents(pkgname.to_owned()) {
                 Ok(fp) => {
-                    return fp;
+                    out.extend(fp);
                 }
                 Err(err) => {
-                    log::error!("{}", err);
+                    log::error!("Failed getting contents of {}: {}", pkgname, err);
+                }
+            }
+
+            if self.autodeps {
+                // Trace dependencies graph for the package
+                for p in tracedeb::DebPackageTrace::new().trace(pkgname.to_owned()) {
+                    log::info!("Keeping dependency package: {}", p.bright_yellow());
+                    match self.get_package_contents(p.to_owned()) {
+                        Ok(fp) => {
+                            out.extend(fp);
+                        }
+                        Err(err) => {
+                            log::error!("Failed getting contents of {}: {}", p, err);
+                        }
+                    }
                 }
             }
         }
 
-        vec![]
+        out
     }
 }

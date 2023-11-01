@@ -1,3 +1,11 @@
+use crate::{
+    filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
+    profile::Profile,
+    rootfs,
+    scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
+};
+use bytesize::ByteSize;
+use filesize::PathExt;
 use std::fs::{self, canonicalize, remove_file, DirEntry};
 use std::{
     collections::HashSet,
@@ -6,27 +14,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
-    profile::Profile,
-    rootfs,
-    scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, general::Scanner},
-};
-
-use bytesize::ByteSize;
-use filesize::PathExt;
-
 /// Main processing of profiles or other data
 #[derive(Clone)]
 pub struct TintProcessor {
     profile: Profile,
     root: PathBuf,
     dry_run: bool,
+    autodeps: bool,
 }
 
 impl TintProcessor {
     pub fn new(root: PathBuf) -> Self {
-        TintProcessor { profile: Profile::default(), root, dry_run: true }
+        TintProcessor { profile: Profile::default(), root, dry_run: true, autodeps: false }
     }
 
     /// Set configuration from a profile
@@ -35,8 +34,15 @@ impl TintProcessor {
         self
     }
 
+    /// Set dry-run flag (no actual writes on the target image)
     pub fn set_dry_run(&mut self, dr: bool) -> &mut Self {
         self.dry_run = dr;
+        self
+    }
+
+    /// Set flag for automatic dependency tracing
+    pub fn set_autodeps(&mut self, ad: bool) -> &mut Self {
+        self.autodeps = ad;
         self
     }
 
@@ -107,7 +113,7 @@ impl TintProcessor {
         for p in paths {
             total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
             total_files += 1;
-            log::info!("  - {}", p.to_str().unwrap());
+            log::debug!("  - {}", p.to_str().unwrap());
         }
 
         println!("\nTotal files to be removed: {}, disk size freed: {}\n", total_files, ByteSize::b(total_size));
@@ -143,7 +149,8 @@ impl TintProcessor {
             paths.extend(ElfScanner::new().scan(Path::new(target_path).to_owned()));
 
             log::debug!("Find package dependencies for {target_path}");
-            paths.extend(DebPackageScanner::new().scan(Path::new(target_path).to_owned()));
+            // XXX: This will re-scan again and again, if target_path belongs to the same package
+            paths.extend(DebPackageScanner::new(self.autodeps).scan(Path::new(target_path).to_owned()));
 
             // Add the target itself
             paths.insert(Path::new(target_path).to_owned());
@@ -153,7 +160,7 @@ impl TintProcessor {
         // and then let TextDataFilter removes what still should be removed.
         // The idea is to keep parts only relevant to the runtime.
         log::debug!("Filtering packages");
-        let pscan = DebPackageScanner::new();
+        let pscan = DebPackageScanner::new(false); // XXX: Maybe --autodeps=LEVEL to optionally include these too?
         for p in self.profile.get_packages() {
             log::debug!("Getting content of package \"{}\"", p);
             paths.extend(pscan.get_package_contents(p.to_string())?);
@@ -195,11 +202,7 @@ impl TintProcessor {
 
         if self.dry_run {
             self.dry_run(p)?;
-
-            log::info!("Preserve:");
-            for x in paths {
-                log::info!("  + {}", x.to_str().unwrap());
-            }
+            ContentFormatter::new(&paths).format();
         } else {
             self.apply_changes(p)?;
         }

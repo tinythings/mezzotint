@@ -5,11 +5,9 @@ mod procdata;
 mod profile;
 mod rootfs;
 mod scanner;
-
+use crate::profile::Profile;
 use clap::{ArgMatches, Command};
 use colored::Colorize;
-
-use crate::profile::Profile;
 use std::{
     env,
     path::{Path, PathBuf},
@@ -54,7 +52,9 @@ fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
             .set_doc(f(params, "f_doc"))
             .set_i18n(f(params, "f_i18n"))
             .set_l10n(f(params, "f_l10n"))
-            .set_log(f(params, "f_log"));
+            .set_log(f(params, "f_log"))
+            .set_arch(f(params, "f_arc"))
+            .set_img(f(params, "f_pic"));
     } else if let Some(profile_path) = profile_path {
         log::info!("Getting profile at {profile_path}");
         match Profile::new(Path::new(profile_path)) {
@@ -79,6 +79,12 @@ fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
                 }
                 if is_f(params, "f_log") {
                     profile.set_manpages(f(params, "f_log"));
+                }
+                if is_f(params, "f_pic") {
+                    profile.set_img(f(params, "f_pic"));
+                }
+                if is_f(params, "f_arc") {
+                    profile.set_arch(f(params, "f_arc"));
                 }
             }
             Err(err) => {
@@ -129,11 +135,23 @@ fn main() -> Result<(), std::io::Error> {
         log::error!("Mountpoint \"{}\" does not exist or is not accessible", rpth.to_str().unwrap().bright_yellow());
         process::exit(exitcode::IOERR);
     }
-    if let Err(err) =
-        procdata::TintProcessor::new(rpth).set_profile(get_profile(cli, &params)).set_dry_run(params.get_flag("dry-run")).start()
+
+    log::info!("Launching scanner and data processor");
+
+    if let Err(err) = procdata::TintProcessor::new(rpth)
+        .set_profile(get_profile(cli, &params))
+        .set_dry_run(params.get_flag("dry-run"))
+        .set_autodeps(params.get_flag("autodeps"))
+        .start()
     {
         log::error!("{}", err);
         process::exit(exitcode::IOERR);
+    }
+
+    if params.get_flag("dry-run") {
+        log::warn!("This was a dry-run. Changes were not applied.");
+    } else {
+        log::info!("Finished. Hopefully it even works :-)");
     }
 
     Ok(())

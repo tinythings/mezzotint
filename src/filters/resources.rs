@@ -1,11 +1,9 @@
+use super::{defs, intf::DataFilter};
+use crate::profile::Profile;
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
 };
-
-use crate::profile::Profile;
-
-use super::intf::DataFilter;
 
 pub struct ResourcesDataFilter {
     data: Vec<PathBuf>,
@@ -37,7 +35,7 @@ impl ResourcesDataFilter {
 
         let p = p.to_str().unwrap();
 
-        for s in [".gz", ".bz2", ".xz", ".zip", ".tar"] {
+        for s in defs::ARC_F_EXT {
             if p.ends_with(s) {
                 return true;
             }
@@ -53,7 +51,7 @@ impl ResourcesDataFilter {
         }
 
         let p = p.to_str().unwrap();
-        for s in [".bmp", ".jpg", ".jpeg", ".png", ".gif", ".xpm", ".tif", ".tiff", ".pbm", ".svg", ".ico"] {
+        for s in defs::IMG_F_EXT {
             if p.ends_with(s) {
                 return true;
             }

@@ -51,6 +51,13 @@ pub fn cli(version: &'static str) -> Command {
                 .help("Do not remove anything, only display what will be removed")
         )
         .arg(
+            Arg::new("autodeps")
+                .short('a')
+                .long("autodeps")
+                .action(clap::ArgAction::SetTrue)
+                .help(format!("Include graph of package dependencies\n{}", "NOTE: This can increase the size, but might not always be useful".yellow()))
+        )
+        .arg(
             Arg::new("root")
                 .short('r')
                 .long("root")
@@ -77,6 +84,12 @@ pub fn cli(version: &'static str) -> Command {
         )
         .arg(
             Arg::new("f_log").long("logs").action(clap::ArgAction::SetTrue).help("Leave any kind of logs")
+        )
+        .arg(
+            Arg::new("f_pic").long("pic").action(clap::ArgAction::SetTrue).help("Leave any graphics (pictures)")
+        )
+        .arg(
+            Arg::new("f_arc").long("arc").action(clap::ArgAction::SetTrue).help("Leave any kind of archives/tarballs")
         )
 
         // Other
