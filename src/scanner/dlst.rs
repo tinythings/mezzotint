@@ -3,7 +3,6 @@ Data lister (fancy STDOUT printer)
 */
 
 use std::{
-    ops::Add,
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
 };
