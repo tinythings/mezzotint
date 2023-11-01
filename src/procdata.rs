@@ -155,7 +155,8 @@ impl TintProcessor {
             paths.extend(ElfScanner::new().scan(Path::new(target_path).to_owned()));
 
             log::debug!("Find package dependencies for {target_path}");
-            paths.extend(DebPackageScanner::new().scan(Path::new(target_path).to_owned()));
+            // XXX: This will re-scan again and again, if target_path belongs to the same package
+            paths.extend(DebPackageScanner::new(self.autodeps).scan(Path::new(target_path).to_owned()));
 
             // Add the target itself
             paths.insert(Path::new(target_path).to_owned());
@@ -165,7 +166,7 @@ impl TintProcessor {
         // and then let TextDataFilter removes what still should be removed.
         // The idea is to keep parts only relevant to the runtime.
         log::debug!("Filtering packages");
-        let pscan = DebPackageScanner::new();
+        let pscan = DebPackageScanner::new(false); // XXX: Maybe --autodeps=LEVEL to optionally include these too?
         for p in self.profile.get_packages() {
             log::debug!("Getting content of package \"{}\"", p);
             paths.extend(pscan.get_package_contents(p.to_string())?);
