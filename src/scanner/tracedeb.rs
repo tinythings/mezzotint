@@ -48,7 +48,9 @@ impl DebPackageTrace {
             }
         }
 
-        self.data.clone().into_iter().collect::<Vec<String>>()
+        let mut data = self.data.clone().into_iter().collect::<Vec<String>>();
+        data.sort();
+        data
     }
 }
 
