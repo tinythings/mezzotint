@@ -51,12 +51,11 @@ pub fn cli(version: &'static str) -> Command {
                 .help("Do not remove anything, only display what will be removed")
         )
         .arg(
-            Arg::new("inspect")
-                .short('s')
-                .long("inspect")
+            Arg::new("autodeps")
+                .short('a')
+                .long("autodeps")
                 .action(clap::ArgAction::SetTrue)
-                .help("Inspect a container to generate a possible profile")
-                .conflicts_with_all(["dry-run", "profile"])
+                .help(format!("Include graph of package dependencies\n{}", "NOTE: This can increase the size, but might not always be useful".yellow()))
         )
         .arg(
             Arg::new("root")
