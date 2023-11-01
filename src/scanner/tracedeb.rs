@@ -30,7 +30,7 @@ impl DebPackageTrace {
                 if let Ok(out) = String::from_utf8(out.stdout) {
                     for l in out.lines().map(|s| s.trim().to_string()).collect::<Vec<String>>() {
                         if l.to_lowercase().starts_with("depends:") {
-                            let l = l.split(" ").into_iter().collect::<Vec<&str>>();
+                            let l = l.split(' ').collect::<Vec<&str>>();
                             if l.len() > 2 {
                                 let pkgname = l[1].to_string();
                                 if !self.data.contains(&pkgname) {
