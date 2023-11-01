@@ -1,9 +1,12 @@
-use std::fs::{self, canonicalize, remove_file, DirEntry};
 use std::{
     collections::HashSet,
     io::Error,
     os::unix,
     path::{Path, PathBuf},
+};
+use std::{
+    fs::{self, canonicalize, remove_file, DirEntry},
+    os::unix::prelude::PermissionsExt,
 };
 
 use crate::{
@@ -14,6 +17,7 @@ use crate::{
 };
 
 use bytesize::ByteSize;
+use colored::Colorize;
 use filesize::PathExt;
 
 /// Main processing of profiles or other data

@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::scanner::{
     general::{Scanner, ScannerCommons},
     tracedeb,
