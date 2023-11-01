@@ -119,7 +119,7 @@ impl TintProcessor {
         for p in paths {
             total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
             total_files += 1;
-            log::info!("  - {}", p.to_str().unwrap());
+            log::debug!("  - {}", p.to_str().unwrap());
         }
 
         println!("\nTotal files to be removed: {}, disk size freed: {}\n", total_files, ByteSize::b(total_size));
