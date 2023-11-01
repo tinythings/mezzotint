@@ -86,7 +86,7 @@ pub fn cli(version: &'static str) -> Command {
             Arg::new("f_log").long("logs").action(clap::ArgAction::SetTrue).help("Leave any kind of logs")
         )
         .arg(
-            Arg::new("f_img").long("pic").action(clap::ArgAction::SetTrue).help("Leave any graphics (pictures)")
+            Arg::new("f_pic").long("pic").action(clap::ArgAction::SetTrue).help("Leave any graphics (pictures)")
         )
         .arg(
             Arg::new("f_arc").long("arc").action(clap::ArgAction::SetTrue).help("Leave any kind of archives/tarballs")
