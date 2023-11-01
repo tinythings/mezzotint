@@ -22,11 +22,12 @@ pub struct TintProcessor {
     profile: Profile,
     root: PathBuf,
     dry_run: bool,
+    autodeps: bool,
 }
 
 impl TintProcessor {
     pub fn new(root: PathBuf) -> Self {
-        TintProcessor { profile: Profile::default(), root, dry_run: true }
+        TintProcessor { profile: Profile::default(), root, dry_run: true, autodeps: false }
     }
 
     /// Set configuration from a profile
@@ -35,8 +36,15 @@ impl TintProcessor {
         self
     }
 
+    /// Set dry-run flag (no actual writes on the target image)
     pub fn set_dry_run(&mut self, dr: bool) -> &mut Self {
         self.dry_run = dr;
+        self
+    }
+
+    /// Set flag for automatic dependency tracing
+    pub fn set_autodeps(&mut self, ad: bool) -> &mut Self {
+        self.autodeps = ad;
         self
     }
 
