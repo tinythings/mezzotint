@@ -1,23 +1,19 @@
+use std::fs::{self, canonicalize, remove_file, DirEntry};
 use std::{
     collections::HashSet,
     io::Error,
     os::unix,
     path::{Path, PathBuf},
 };
-use std::{
-    fs::{self, canonicalize, remove_file, DirEntry},
-    os::unix::prelude::PermissionsExt,
-};
 
 use crate::{
     filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
     profile::Profile,
     rootfs,
-    scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, general::Scanner},
+    scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
 };
 
 use bytesize::ByteSize;
-use colored::Colorize;
 use filesize::PathExt;
 
 /// Main processing of profiles or other data
@@ -208,29 +204,7 @@ impl TintProcessor {
 
         if self.dry_run {
             self.dry_run(p)?;
-
-            log::info!("Preserve:");
-            for p in paths {
-                if p.is_dir() {
-                    println!("{}", p.to_str().unwrap().bright_blue().bold());
-                }
-
-                if p.is_symlink() {
-                    println!(
-                        "{} -> {}",
-                        p.to_str().unwrap().bright_cyan(),
-                        p.read_link().unwrap().as_path().to_str().unwrap().blue()
-                    );
-                }
-
-                if p.is_file() {
-                    if p.metadata().unwrap().permissions().mode() & 0o111 != 0 {
-                        println!("{}", format!("*{}", p.to_str().unwrap()).bright_green());
-                    } else {
-                        println!("{}", p.to_str().unwrap());
-                    }
-                }
-            }
+            ContentFormatter::new(&paths).format();
         } else {
             self.apply_changes(p)?;
         }
