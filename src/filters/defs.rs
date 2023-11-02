@@ -16,7 +16,7 @@ pub const DOC_FP_EXT: &[&str] = &[".eps", ".pdf", ".ps"];
 pub const DOC_LOCATIONS: &[&str] = &["/usr/share/doc"];
 
 /// Headers
-pub const H_SRC_F_EXT: &[&str] = &[".h", ".hpp"];
+pub const SRC_FH_EXT: &[&str] = &[".h", ".hpp"];
 
 /// Archives
 pub const ARC_F_EXT: &[&str] = &[".gz", ".bz2", ".xz", ".zip", ".tar"];

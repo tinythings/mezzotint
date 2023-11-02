@@ -59,6 +59,30 @@ impl ResourcesDataFilter {
 
         false
     }
+
+    /// Detects if a file is still a potential junk (but unsure)
+    pub fn is_potential_junk(fname: &str) -> bool {
+        for ext in
+            defs::DOC_F_EXT.iter().chain(defs::ARC_F_EXT.iter()).chain(defs::SRC_FH_EXT.iter()).chain(defs::DOC_FP_EXT.iter())
+        {
+            if fname.ends_with(ext) {
+                return true;
+            }
+        }
+
+        for sf in defs::DOC_STUB_FILES {
+            if fname == *sf {
+                return true;
+            }
+        }
+
+        // Potentially doc stubfile that doesn't look like a known one
+        if fname == fname.to_uppercase() {
+            return true;
+        }
+
+        false
+    }
 }
 
 impl DataFilter for ResourcesDataFilter {

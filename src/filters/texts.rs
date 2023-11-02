@@ -65,7 +65,7 @@ impl TextDataFilter {
 
         let p = p.to_str().unwrap();
 
-        for c in ["/doc/"].iter().chain(defs::DOC_STUB_FILES.iter()) {
+        for c in ["/doc/"].iter().chain(defs::DOC_STUB_FILES) {
             if p.to_lowercase().contains(c.to_lowercase().as_str()) {
                 return true;
             }
@@ -77,7 +77,7 @@ impl TextDataFilter {
             }
         }
 
-        for c in defs::DOC_F_EXT {
+        for c in defs::DOC_F_EXT.iter().chain(defs::DOC_FP_EXT).chain(defs::SRC_FH_EXT) {
             if p.ends_with(c) {
                 return true;
             }

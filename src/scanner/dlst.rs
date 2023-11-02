@@ -2,7 +2,10 @@
 Data lister (fancy STDOUT printer)
 */
 
-use crate::filters::defs::{self};
+use crate::filters::{
+    defs::{self},
+    resources,
+};
 use bytesize::ByteSize;
 use colored::Colorize;
 use std::{
@@ -25,6 +28,9 @@ impl<'a> ContentFormatter<'a> {
     pub(crate) fn format(&mut self) {
         let d_len = self.fs_data.len() - 1;
         let mut t_size: u64 = 0;
+        let mut j_size: u64 = 0; // size of junk
+        let mut j_total: u64 = 0; // total junk files
+
         for (pi, p) in self.fs_data.iter().enumerate() {
             t_size += p.metadata().unwrap().len();
             let (dname, mut fname) = self.dn(p);
@@ -53,7 +59,9 @@ impl<'a> ContentFormatter<'a> {
             } else {
                 if fname.ends_with(".so") || fname.contains(".so.") {
                     fname = fname.green().to_string();
-                } else if self.is_potential_junk(&fname) {
+                } else if resources::ResourcesDataFilter::is_potential_junk(&fname) {
+                    j_total += 1;
+                    j_size += p.metadata().unwrap().len();
                     fname = format!("{}  {}", "⚠️".bright_red().bold(), fname.bright_red());
                 }
 
@@ -61,30 +69,20 @@ impl<'a> ContentFormatter<'a> {
             }
         }
 
-        println!("\nPreserved {} files, taking space: {}\n", d_len + 1, ByteSize::b(t_size));
-    }
-
-    fn is_potential_junk(&self, fname: &str) -> bool {
-        for ext in
-            defs::DOC_F_EXT.iter().chain(defs::ARC_F_EXT.iter()).chain(defs::H_SRC_F_EXT.iter()).chain(defs::DOC_FP_EXT.iter())
-        {
-            if fname.ends_with(ext) {
-                return true;
-            }
+        // Print the summary
+        println!(
+            "\nPreserved {} files, taking {} of a disk space",
+            (d_len + 1).to_string().bright_green(),
+            ByteSize::b(t_size).to_string().bright_yellow()
+        );
+        if j_total > 0 {
+            println!(
+                "Potentially {} junk files, taking {} of a disk space",
+                j_total.to_string().bright_red(),
+                ByteSize::b(j_size).to_string().bright_yellow()
+            );
         }
-
-        for sf in defs::DOC_STUB_FILES {
-            if fname == *sf {
-                return true;
-            }
-        }
-
-        // Potentially doc stubfile that doesn't look like a known one
-        if fname == fname.to_uppercase() {
-            return true;
-        }
-
-        false
+        println!("");
     }
 
     /// Get dir/name split, painted accordingly
