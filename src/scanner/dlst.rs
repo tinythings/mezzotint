@@ -28,32 +28,46 @@ impl<'a> ContentFormatter<'a> {
         let mut t_size: u64 = 0;
         let mut j_size: u64 = 0; // size of junk
         let mut j_total: u64 = 0; // total junk files
+        let mut d_total: u64 = 0;
+        let mut d_size: u64 = 0;
 
         for (pi, p) in self.fs_data.iter().enumerate() {
+            let mut t_leaf: String = "".to_string();
+            let mut leaf = "  ├─";
+
             t_size += p.metadata().unwrap().len();
             let (dname, mut fname) = self.dn(p);
 
             if self.last_dir != dname {
                 self.last_dir = dname.to_owned();
+                t_leaf = "".to_string();
                 println!("\n{}", self.last_dir.bright_blue().bold());
                 println!("{}", "──┬──┄┄╌╌ ╌  ╌".blue());
             }
 
-            let mut leaf = "  ├─";
             if pi == d_len || (pi < d_len && dname != self.fs_data[pi + 1].parent().unwrap().to_str().unwrap()) {
                 leaf = "  ╰─";
+                t_leaf = format!(
+                    "\n{}{}{}{}",
+                    "Files: ".blue(),
+                    d_total.to_string().bright_blue(),
+                    ", Size: ".blue(),
+                    ByteSize::b(d_size).to_string().bright_blue()
+                );
+                (d_total, d_size) = (0, 0);
             }
 
             if p.is_symlink() {
                 println!(
-                    "{} {} {} {}",
+                    "{} {} {} {}{}",
                     leaf.blue(),
                     fname.bright_cyan().bold(),
                     "⮕".yellow().dimmed(),
-                    p.read_link().unwrap().as_path().to_str().unwrap().cyan()
+                    p.read_link().unwrap().as_path().to_str().unwrap().cyan(),
+                    t_leaf
                 );
             } else if p.metadata().unwrap().permissions().mode() & 0o111 != 0 {
-                println!("{} {}", leaf.blue(), fname.bright_green().bold());
+                println!("{} {}{}", leaf.blue(), fname.bright_green().bold(), t_leaf);
             } else {
                 if fname.ends_with(".so") || fname.contains(".so.") {
                     fname = fname.green().to_string();
@@ -63,8 +77,11 @@ impl<'a> ContentFormatter<'a> {
                     fname = format!("{}  {}", "⚠️".bright_red().bold(), fname.bright_red());
                 }
 
-                println!("{} {}", leaf.blue(), fname);
+                println!("{} {}{}", leaf.blue(), fname, t_leaf);
             }
+
+            d_total += 1;
+            d_size += p.metadata().unwrap().len();
         }
 
         // Print the summary
