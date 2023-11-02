@@ -4,6 +4,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use super::defs;
+
 pub struct TextDataFilter {
     data: HashSet<PathBuf>,
     remove_manpages: bool,
@@ -45,7 +47,7 @@ impl TextDataFilter {
         _p.pop();
 
         self.remove_manpages
-            && p.to_str().unwrap().starts_with("/usr/share/man")
+            && p.to_str().unwrap().starts_with(defs::D_MANPAGES)
             && _p.file_name().unwrap().to_str().unwrap().starts_with("man")
     }
 
@@ -55,21 +57,27 @@ impl TextDataFilter {
             return false;
         }
 
-        let p = p.to_str().unwrap();
-
-        for c in ["/doc/", "changelog", "readme"] {
-            if p.to_lowercase().contains(c) {
+        for c in defs::DOC_STUB_FILES {
+            if p.file_name().unwrap_or_default().to_str().unwrap_or_default().contains(c) {
                 return true;
             }
         }
 
-        for c in ["/usr/share/doc"] {
+        let p = p.to_str().unwrap();
+
+        for c in ["/doc/"].iter().chain(defs::DOC_STUB_FILES.iter()) {
+            if p.to_lowercase().contains(c.to_lowercase().as_str()) {
+                return true;
+            }
+        }
+
+        for c in defs::DOC_LOCATIONS {
             if p.starts_with(c) {
                 return true;
             }
         }
 
-        for c in [".txt", ".doc", ".md", ".rtx", ".htm", ".html"] {
+        for c in defs::DOC_F_EXT {
             if p.ends_with(c) {
                 return true;
             }
@@ -80,12 +88,12 @@ impl TextDataFilter {
 
     /// Is localisation
     fn filter_l10n(&self, p: &Path) -> bool {
-        self.remove_l10n && p.to_str().unwrap().starts_with("/usr/share/locale")
+        self.remove_l10n && p.to_str().unwrap().starts_with(defs::D_L10N)
     }
 
     /// Is internationalisation
     fn filter_i18n(&self, p: &Path) -> bool {
-        self.remove_i18n && p.to_str().unwrap().starts_with("/usr/share/i18n")
+        self.remove_i18n && p.to_str().unwrap().starts_with(defs::D_I18N)
     }
 }
 
