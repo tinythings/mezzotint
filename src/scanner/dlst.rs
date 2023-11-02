@@ -2,10 +2,7 @@
 Data lister (fancy STDOUT printer)
 */
 
-use crate::filters::{
-    defs::{self},
-    resources,
-};
+use crate::filters::resources;
 use bytesize::ByteSize;
 use colored::Colorize;
 use std::{
