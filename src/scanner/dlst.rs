@@ -22,6 +22,7 @@ impl<'a> ContentFormatter<'a> {
         ContentFormatter { fs_data, last_dir: "".to_string() }
     }
 
+    #[allow(clippy::println_empty_string)]
     pub(crate) fn format(&mut self) {
         let d_len = self.fs_data.len() - 1;
         let mut t_size: u64 = 0;
