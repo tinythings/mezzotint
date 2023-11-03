@@ -1,5 +1,5 @@
 use super::{defs, intf::DataFilter};
-use crate::profile::Profile;
+use crate::{procdata::Autodeps, profile::Profile};
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
@@ -7,13 +7,14 @@ use std::{
 
 pub struct ResourcesDataFilter {
     data: Vec<PathBuf>,
+    autodeps: Autodeps,
     remove_archives: bool,
     remove_images: bool, // not blobs (qcow2, raw etc) but images, like JPEG, PNG, XPM...
 }
 
 impl ResourcesDataFilter {
-    pub fn new(data: Vec<PathBuf>, profile: Profile) -> Self {
-        let mut rdf = ResourcesDataFilter { data, remove_archives: false, remove_images: false };
+    pub fn new(data: Vec<PathBuf>, profile: Profile, autodeps: Autodeps) -> Self {
+        let mut rdf = ResourcesDataFilter { data, autodeps, remove_archives: false, remove_images: false };
         if profile.filter_arc() {
             log::debug!("Removing archives");
             rdf.remove_archives = true;
@@ -89,7 +90,10 @@ impl DataFilter for ResourcesDataFilter {
     fn filter(&self, data: &mut HashSet<PathBuf>) {
         let mut out: Vec<PathBuf> = Vec::default();
         for p in &self.data {
-            if self.filter_archives(p) || self.filter_images(p) {
+            if self.filter_archives(p)
+                || self.filter_images(p)
+                || (self.autodeps == Autodeps::Clean && ResourcesDataFilter::is_potential_junk(p.to_str().unwrap()))
+            {
                 continue;
             }
             out.push(p.to_owned());
