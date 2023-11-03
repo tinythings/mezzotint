@@ -88,11 +88,16 @@ impl ResourcesDataFilter {
 
 impl DataFilter for ResourcesDataFilter {
     fn filter(&self, data: &mut HashSet<PathBuf>) {
+        if self.autodeps == Autodeps::Clean || self.autodeps == Autodeps::Tight {
+            log::info!("Automatically removing potential junk resources");
+        }
+
         let mut out: Vec<PathBuf> = Vec::default();
         for p in &self.data {
             if self.filter_archives(p)
                 || self.filter_images(p)
-                || (self.autodeps == Autodeps::Clean && ResourcesDataFilter::is_potential_junk(p.to_str().unwrap()))
+                || ((self.autodeps == Autodeps::Clean || self.autodeps == Autodeps::Tight)
+                    && ResourcesDataFilter::is_potential_junk(p.file_name().unwrap().to_str().unwrap()))
             {
                 continue;
             }

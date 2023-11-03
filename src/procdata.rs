@@ -15,11 +15,12 @@ use std::{
 };
 
 /// Autodependency mode
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Autodeps {
     Undef,
     Free,
     Clean,
+    Tight,
 }
 /// Main processing of profiles or other data
 #[derive(Clone)]
@@ -52,6 +53,7 @@ impl TintProcessor {
         match ad.as_str() {
             "free" => self.autodeps = Autodeps::Free,
             "clean" => self.autodeps = Autodeps::Clean,
+            "tight" => self.autodeps = Autodeps::Tight,
             _ => self.autodeps = Autodeps::Undef,
         }
 

@@ -56,7 +56,7 @@ pub fn cli(version: &'static str) -> Command {
                 .long("autodeps")
                 .default_value("none")
                 .value_name("mode")
-                .value_parser(["free", "clean", "none"])
+                .value_parser(["free", "clean", "tight", "none"])
                 .help(format!("Auto-add package dependencies.\n{}", " NOTE: This can increase the size, but might not always be useful\n".yellow()))
         )
         .arg(

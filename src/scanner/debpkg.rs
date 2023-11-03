@@ -109,7 +109,7 @@ impl Scanner for DebPackageScanner {
                 }
             }
 
-            if self.autodeps != Autodeps::Undef {
+            if self.autodeps == Autodeps::Clean || self.autodeps == Autodeps::Free {
                 // Trace dependencies graph for the package
                 for p in tracedeb::DebPackageTrace::new().trace(pkgname.to_owned()) {
                     log::info!("Keeping dependency package: {}", p.bright_yellow());
