@@ -14,18 +14,26 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Autodependency mode
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Autodeps {
+    Undef,
+    Free,
+    Clean,
+    Tight,
+}
 /// Main processing of profiles or other data
 #[derive(Clone)]
 pub struct TintProcessor {
     profile: Profile,
     root: PathBuf,
     dry_run: bool,
-    autodeps: bool,
+    autodeps: Autodeps,
 }
 
 impl TintProcessor {
     pub fn new(root: PathBuf) -> Self {
-        TintProcessor { profile: Profile::default(), root, dry_run: true, autodeps: false }
+        TintProcessor { profile: Profile::default(), root, dry_run: true, autodeps: Autodeps::Free }
     }
 
     /// Set configuration from a profile
@@ -41,8 +49,14 @@ impl TintProcessor {
     }
 
     /// Set flag for automatic dependency tracing
-    pub fn set_autodeps(&mut self, ad: bool) -> &mut Self {
-        self.autodeps = ad;
+    pub fn set_autodeps(&mut self, ad: String) -> &mut Self {
+        match ad.as_str() {
+            "free" => self.autodeps = Autodeps::Free,
+            "clean" => self.autodeps = Autodeps::Clean,
+            "tight" => self.autodeps = Autodeps::Tight,
+            _ => self.autodeps = Autodeps::Undef,
+        }
+
         self
     }
 
@@ -160,7 +174,7 @@ impl TintProcessor {
         // and then let TextDataFilter removes what still should be removed.
         // The idea is to keep parts only relevant to the runtime.
         log::debug!("Filtering packages");
-        let pscan = DebPackageScanner::new(false); // XXX: Maybe --autodeps=LEVEL to optionally include these too?
+        let pscan = DebPackageScanner::new(Autodeps::Undef);
         for p in self.profile.get_packages() {
             log::debug!("Getting content of package \"{}\"", p);
             paths.extend(pscan.get_package_contents(p.to_string())?);
@@ -186,7 +200,8 @@ impl TintProcessor {
 
         // Remove resources
         log::debug!("Filtering resources");
-        ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.to_owned()).filter(&mut paths);
+        ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.to_owned(), self.autodeps)
+            .filter(&mut paths);
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");

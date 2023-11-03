@@ -141,7 +141,7 @@ fn main() -> Result<(), std::io::Error> {
     if let Err(err) = procdata::TintProcessor::new(rpth)
         .set_profile(get_profile(cli, &params))
         .set_dry_run(params.get_flag("dry-run"))
-        .set_autodeps(params.get_flag("autodeps"))
+        .set_autodeps(params.get_one::<String>("autodeps").unwrap().to_string())
         .start()
     {
         log::error!("{}", err);

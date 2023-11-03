@@ -1,7 +1,10 @@
-use crate::scanner::{
-    general::{Scanner, ScannerCommons},
-    tracedeb,
-    traceitf::PkgDepTrace,
+use crate::{
+    procdata::Autodeps,
+    scanner::{
+        general::{Scanner, ScannerCommons},
+        tracedeb,
+        traceitf::PkgDepTrace,
+    },
 };
 use colored::Colorize;
 use std::{
@@ -13,12 +16,12 @@ use std::{
 /// a target belongs to.
 pub struct DebPackageScanner {
     commons: ScannerCommons,
-    autodeps: bool,
+    autodeps: Autodeps,
 }
 
 impl DebPackageScanner {
     /// Constructor
-    pub fn new(autodeps: bool) -> Self {
+    pub fn new(autodeps: Autodeps) -> Self {
         DebPackageScanner { commons: ScannerCommons::new(), autodeps }
     }
 
@@ -106,7 +109,7 @@ impl Scanner for DebPackageScanner {
                 }
             }
 
-            if self.autodeps {
+            if self.autodeps == Autodeps::Clean || self.autodeps == Autodeps::Free {
                 // Trace dependencies graph for the package
                 for p in tracedeb::DebPackageTrace::new().trace(pkgname.to_owned()) {
                     log::info!("Keeping dependency package: {}", p.bright_yellow());
