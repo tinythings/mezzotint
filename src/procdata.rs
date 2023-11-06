@@ -6,7 +6,7 @@ use crate::{
 };
 use bytesize::ByteSize;
 use filesize::PathExt;
-use std::fs::{self, canonicalize, remove_file, DirEntry};
+use std::fs::{self, canonicalize, remove_file, DirEntry, File};
 use std::{
     collections::HashSet,
     io::Error,
@@ -29,11 +29,18 @@ pub struct TintProcessor {
     root: PathBuf,
     dry_run: bool,
     autodeps: Autodeps,
+    lockfile: PathBuf,
 }
 
 impl TintProcessor {
     pub fn new(root: PathBuf) -> Self {
-        TintProcessor { profile: Profile::default(), root, dry_run: true, autodeps: Autodeps::Free }
+        TintProcessor {
+            profile: Profile::default(),
+            root,
+            dry_run: true,
+            autodeps: Autodeps::Free,
+            lockfile: PathBuf::from("/.tinted.lock"),
+        }
     }
 
     /// Set configuration from a profile
@@ -115,6 +122,7 @@ impl TintProcessor {
         }
 
         TintProcessor::remove_empty_dirs(&PathBuf::from("/"))?;
+        File::create(&self.lockfile)?; // Create an empty lock file, indicated mission complete.
 
         Ok(())
     }
@@ -154,6 +162,10 @@ impl TintProcessor {
     // Start tint processor
     pub fn start(&self) -> Result<(), Error> {
         self.switch_root()?;
+
+        if self.lockfile.exists() {
+            return Err(Error::new(std::io::ErrorKind::AlreadyExists, "This container seems already tinted."));
+        }
 
         // Paths to keep
         let mut paths: HashSet<PathBuf> = HashSet::default();
