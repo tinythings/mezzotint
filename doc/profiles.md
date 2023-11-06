@@ -14,8 +14,13 @@ targets:
 
 # List of preserved packages.
 packages:
-    - bash
-    - apt
+    # "Plus" or just a package name
+    # will retain it
+    - +bash
+    - +apt
+
+    # "Minus" explicitly says remove the package
+    - -blah
 
 # Profile config
 config:
