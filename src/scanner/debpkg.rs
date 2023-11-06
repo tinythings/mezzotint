@@ -8,6 +8,7 @@ use crate::{
 };
 use colored::Colorize;
 use std::{
+    collections::HashSet,
     io::{Error, ErrorKind},
     path::PathBuf,
 };
@@ -17,12 +18,13 @@ use std::{
 pub struct DebPackageScanner {
     commons: ScannerCommons,
     autodeps: Autodeps,
+    excluded_packages: HashSet<String>,
 }
 
 impl DebPackageScanner {
     /// Constructor
     pub fn new(autodeps: Autodeps) -> Self {
-        DebPackageScanner { commons: ScannerCommons::new(), autodeps }
+        DebPackageScanner { commons: ScannerCommons::new(), autodeps, excluded_packages: HashSet::default() }
     }
 
     /// Expands target taking to the account Linux /bin symlinks to /usr/bin etc.
@@ -111,7 +113,10 @@ impl Scanner for DebPackageScanner {
 
             if self.autodeps == Autodeps::Clean || self.autodeps == Autodeps::Free {
                 // Trace dependencies graph for the package
-                for p in tracedeb::DebPackageTrace::new().trace(pkgname.to_owned()) {
+                for p in tracedeb::DebPackageTrace::new()
+                    .exclude(self.excluded_packages.clone().into_iter().collect::<Vec<String>>())
+                    .trace(pkgname.to_owned())
+                {
                     log::info!("Keeping dependency package: {}", p.bright_yellow());
                     match self.get_package_contents(p.to_owned()) {
                         Ok(fp) => {
@@ -126,5 +131,10 @@ impl Scanner for DebPackageScanner {
         }
 
         out
+    }
+
+    fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self {
+        self.excluded_packages.extend(pkgs);
+        self
     }
 }

@@ -31,6 +31,7 @@ pub struct Profile {
     f_expl_keep: Vec<PathBuf>,
 
     packages: Vec<String>,
+    dropped_packages: Vec<String>,
     targets: Vec<String>,
 }
 
@@ -48,6 +49,7 @@ impl Profile {
             f_img: true,
             f_arc: true,
             packages: vec![],
+            dropped_packages: vec![],
             targets: vec![],
             f_expl_prune: vec![],
             f_expl_keep: vec![],
@@ -111,7 +113,20 @@ impl Profile {
         self.targets.extend(p.targets);
 
         if let Some(pkgs) = p.packages {
-            self.packages.extend(pkgs);
+            for p in &pkgs {
+                let mut p = p.replace(' ', "");
+                if let Some(p) = p.strip_prefix('-') {
+                    log::debug!("Dropping contents from package \"{}\"", p);
+                    self.dropped_packages.push(p.to_string());
+                    continue;
+                }
+
+                if let Some(s) = p.strip_prefix('+') {
+                    p = s.to_string();
+                }
+
+                self.packages.push(p);
+            }
         }
 
         Ok(())
@@ -249,5 +264,10 @@ impl Profile {
     /// Get packages
     pub fn get_packages(&self) -> &Vec<String> {
         &self.packages
+    }
+
+    /// Get dropped packages
+    pub fn get_dropped_packages(&self) -> &Vec<String> {
+        &self.dropped_packages
     }
 }
