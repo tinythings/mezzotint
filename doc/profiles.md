@@ -43,6 +43,10 @@ config:
         # Matches empty directories or directories with emnpty subdirectories
         - dir
 
+        # Replase all the above
+        - all
+
+
     # Specific paths that were not automatically detected
     # as not needed. Unix glob is used to be more specific, if needed.
     prune:
