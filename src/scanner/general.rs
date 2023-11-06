@@ -1,7 +1,11 @@
 use std::{fs, io::Error, path::PathBuf, process::Command};
 
 pub(crate) trait Scanner {
+    /// Scan path
     fn scan(&mut self, pth: PathBuf) -> Vec<PathBuf>;
+
+    /// Add packages to be excluded from the scan
+    fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self;
 }
 
 pub struct ScannerCommons {

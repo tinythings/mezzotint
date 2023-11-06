@@ -14,8 +14,13 @@ targets:
 
 # List of preserved packages.
 packages:
-    - bash
-    - apt
+    # "Plus" or just a package name
+    # will retain it
+    - +bash
+    - +apt
+
+    # "Minus" explicitly says remove the package
+    - -blah
 
 # Profile config
 config:
@@ -42,6 +47,10 @@ config:
 
         # Matches empty directories or directories with emnpty subdirectories
         - dir
+
+        # Replase all the above
+        - all
+
 
     # Specific paths that were not automatically detected
     # as not needed. Unix glob is used to be more specific, if needed.

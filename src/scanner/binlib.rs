@@ -41,4 +41,9 @@ impl Scanner for ElfScanner {
         log::debug!("Scanning for dependencies in {}", pth.to_str().unwrap());
         self.get_dynlibs(pth.to_str().unwrap().to_string()).iter().map(PathBuf::from).collect::<Vec<PathBuf>>()
     }
+
+    /// Bogus trait implementation, does nothing in this case
+    fn exclude(&mut self, _: Vec<String>) -> &mut Self {
+        self
+    }
 }

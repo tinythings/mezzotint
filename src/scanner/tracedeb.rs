@@ -3,11 +3,12 @@ use std::{collections::HashSet, process::Command};
 
 pub struct DebPackageTrace {
     data: HashSet<String>,
+    exclude: HashSet<String>,
 }
 
 impl DebPackageTrace {
     pub fn new() -> Self {
-        DebPackageTrace { data: HashSet::default() }
+        DebPackageTrace { data: HashSet::default(), exclude: HashSet::default() }
     }
 
     /// Get list of package dependencies for the first nearby level
@@ -57,6 +58,14 @@ impl PkgDepTrace for DebPackageTrace {
     fn trace(&mut self, pkgname: String) -> Vec<String> {
         log::info!("Getting dependencies for a package {}", pkgname);
 
-        self.get_dependencies(pkgname, true)
+        let mut d = self.get_dependencies(pkgname, true);
+        d.retain(|p| !self.exclude.contains(p));
+
+        d
+    }
+
+    fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self {
+        self.exclude.extend(pkgs);
+        self
     }
 }
