@@ -5,6 +5,7 @@ Data lister (fancy STDOUT printer)
 use crate::filters::resources;
 use bytesize::ByteSize;
 use colored::Colorize;
+use filesize::PathExt;
 use std::{
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
@@ -15,11 +16,33 @@ use std::{
 pub struct ContentFormatter<'a> {
     fs_data: &'a Vec<PathBuf>,
     last_dir: String,
+    fs_removed: Option<&'a Vec<PathBuf>>,
 }
 
 impl<'a> ContentFormatter<'a> {
     pub(crate) fn new(fs_data: &'a Vec<PathBuf>) -> Self {
-        ContentFormatter { fs_data, last_dir: "".to_string() }
+        Self { fs_data, last_dir: "".to_string(), fs_removed: None }
+    }
+
+    /// Set removed data
+    pub(crate) fn set_removed(&mut self, r: &'a Vec<PathBuf>) -> &mut Self {
+        self.fs_removed = Some(r);
+        self
+    }
+
+    /// Perform only a dry-run
+    fn format_removed(&self) -> (u64, u64) {
+        let mut total_size: u64 = 0;
+        let mut total_files: u64 = 0;
+
+        if let Some(fsr) = self.fs_removed {
+            for p in fsr {
+                total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
+                total_files += 1;
+                log::debug!("  - {}", p.to_str().unwrap());
+            }
+        }
+        (total_files, total_size)
     }
 
     #[allow(clippy::println_empty_string)]
@@ -30,6 +53,7 @@ impl<'a> ContentFormatter<'a> {
         let mut j_total: u64 = 0; // total junk files
         let mut d_total: u64 = 0;
         let mut d_size: u64 = 0;
+        let (t_r_files, t_r_size) = self.format_removed();
 
         for (pi, p) in self.fs_data.iter().enumerate() {
             let mut t_leaf: String = "".to_string();
@@ -86,7 +110,12 @@ impl<'a> ContentFormatter<'a> {
 
         // Print the summary
         println!(
-            "\nPreserved {} files, taking {} of a disk space",
+            "\nRemoved {} files, releasing {} of a disk space",
+            t_r_files.to_string().bright_green(),
+            ByteSize::b(t_r_size).to_string().bright_yellow()
+        );
+        println!(
+            "Preserved {} files, taking {} of a disk space",
             (d_len + 1).to_string().bright_green(),
             ByteSize::b(t_size).to_string().bright_yellow()
         );

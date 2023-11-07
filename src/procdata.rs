@@ -4,8 +4,6 @@ use crate::{
     rootfs,
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
 };
-use bytesize::ByteSize;
-use filesize::PathExt;
 use std::fs::{self, canonicalize, remove_file, DirEntry, File};
 use std::{
     collections::HashSet,
@@ -127,22 +125,6 @@ impl TintProcessor {
         Ok(())
     }
 
-    /// Perform only a dry-run
-    fn dry_run(&self, paths: Vec<PathBuf>) -> Result<(), Error> {
-        let mut total_size: u64 = 0;
-        let mut total_files: usize = 0;
-
-        for p in paths {
-            total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
-            total_files += 1;
-            log::debug!("  - {}", p.to_str().unwrap());
-        }
-
-        println!("\nTotal files to be removed: {}, disk size freed: {}\n", total_files, ByteSize::b(total_size));
-
-        Ok(())
-    }
-
     fn ext_path(p: HashSet<PathBuf>, mut np: HashSet<PathBuf>) -> HashSet<PathBuf> {
         for tgt in p.iter() {
             if tgt.is_symlink() {
@@ -228,8 +210,7 @@ impl TintProcessor {
         paths.sort();
 
         if self.dry_run {
-            self.dry_run(p)?;
-            ContentFormatter::new(&paths).format();
+            ContentFormatter::new(&paths).set_removed(&p).format();
         } else {
             self.apply_changes(p)?;
         }
