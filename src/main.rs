@@ -5,6 +5,7 @@ mod procdata;
 mod profile;
 mod rootfs;
 mod scanner;
+mod shcall;
 use crate::profile::Profile;
 use clap::{ArgMatches, Command};
 use colored::Colorize;
