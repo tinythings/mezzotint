@@ -3,6 +3,7 @@ use crate::{
     profile::Profile,
     rootfs,
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
+    shcall::ShellScript,
 };
 use std::fs::{self, canonicalize, remove_file, DirEntry, File};
 use std::{
@@ -141,12 +142,40 @@ impl TintProcessor {
         np
     }
 
+    /// Call a script hook
+    fn call_script(s: String) -> Result<(), Error> {
+        // XXX: It can run args, but from where pass them? Profile? CLI? Both? None at all?..
+        let (stdout, stderr) = ShellScript::new(s, None).run()?;
+
+        if !stdout.is_empty() {
+            log::debug!("Post-hook stdout:");
+            log::debug!("{}", stdout);
+        }
+
+        if !stderr.is_empty() {
+            log::error!("Post-hook error:");
+            log::error!("{}", stderr);
+        }
+
+        Ok(())
+    }
+
     // Start tint processor
     pub fn start(&self) -> Result<(), Error> {
         self.switch_root()?;
 
+        // Bail-out if the image is already processed
         if self.lockfile.exists() {
             return Err(Error::new(std::io::ErrorKind::AlreadyExists, "This container seems already tinted."));
+        }
+
+        // Run pre-hook, if any
+        if self.profile.has_pre_hook() {
+            if self.dry_run {
+                log::debug!("Pre-hook:\n{}", self.profile.get_pre_hook());
+            } else {
+                Self::call_script(self.profile.get_pre_hook())?;
+            }
         }
 
         // Paths to keep
@@ -210,8 +239,15 @@ impl TintProcessor {
         paths.sort();
 
         if self.dry_run {
+            if self.profile.has_post_hook() {
+                log::debug!("Post-hook:\n{}", self.profile.get_post_hook());
+            }
             ContentFormatter::new(&paths).set_removed(&p).format();
         } else {
+            // Run post-hook (doesn't affect changes apply)
+            if self.profile.has_post_hook() {
+                Self::call_script(self.profile.get_post_hook())?;
+            }
             self.apply_changes(p)?;
         }
 
