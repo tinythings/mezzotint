@@ -296,9 +296,19 @@ impl Profile {
         &self.dropped_packages
     }
 
+    /// Returns True if pre-hook defined
+    pub fn has_pre_hook(&self) -> bool {
+        !self.s_pre.is_empty()
+    }
+
     /// Get pre-hook
     pub fn get_pre_hook(&self) -> String {
         self.s_pre.to_owned()
+    }
+
+    /// Returns True if post-hook defined
+    pub fn has_post_hook(&self) -> bool {
+        !self.s_post.is_empty()
     }
 
     /// Get post-hook
