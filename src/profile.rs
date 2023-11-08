@@ -14,6 +14,13 @@ pub struct PTargets {
     targets: Vec<String>,
     packages: Option<Vec<String>>,
     config: Option<PConfig>,
+    hooks: Option<PHooks>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct PHooks {
+    before: Option<String>,
+    after: Option<String>,
 }
 
 /// Profile
@@ -33,6 +40,10 @@ pub struct Profile {
     packages: Vec<String>,
     dropped_packages: Vec<String>,
     targets: Vec<String>,
+
+    // hooks
+    s_pre: String,
+    s_post: String,
 }
 
 impl Profile {
@@ -48,11 +59,15 @@ impl Profile {
             f_log: true,
             f_img: true,
             f_arc: true,
+
             packages: vec![],
             dropped_packages: vec![],
             targets: vec![],
             f_expl_prune: vec![],
             f_expl_keep: vec![],
+
+            s_post: String::from(""),
+            s_pre: String::from(""),
         }
     }
 
@@ -126,6 +141,16 @@ impl Profile {
                 }
 
                 self.packages.push(p);
+            }
+        }
+
+        // Get hooks
+        if let Some(hooks) = p.hooks {
+            if let Some(pre) = hooks.before {
+                self.s_pre = pre;
+            }
+            if let Some(post) = hooks.after {
+                self.s_post = post;
             }
         }
 
@@ -269,5 +294,25 @@ impl Profile {
     /// Get dropped packages
     pub fn get_dropped_packages(&self) -> &Vec<String> {
         &self.dropped_packages
+    }
+
+    /// Returns True if pre-hook defined
+    pub fn has_pre_hook(&self) -> bool {
+        !self.s_pre.is_empty()
+    }
+
+    /// Get pre-hook
+    pub fn get_pre_hook(&self) -> String {
+        self.s_pre.to_owned()
+    }
+
+    /// Returns True if post-hook defined
+    pub fn has_post_hook(&self) -> bool {
+        !self.s_post.is_empty()
+    }
+
+    /// Get post-hook
+    pub fn get_post_hook(&self) -> String {
+        self.s_post.to_owned()
     }
 }
