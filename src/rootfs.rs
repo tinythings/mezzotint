@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    fs,
     path::{Path, PathBuf},
     vec,
 };
@@ -9,11 +10,13 @@ pub struct RootFS {
     tmp: bool, // keep /tmp
     rootfs: HashSet<PathBuf>,
     ptree: Vec<PathBuf>,
+    broken_links: HashSet<PathBuf>,
 }
 
 impl RootFS {
     pub fn new() -> Self {
-        let mut rf = RootFS { pds: true, tmp: true, rootfs: HashSet::default(), ptree: vec![] };
+        let mut rf =
+            RootFS { pds: true, tmp: true, rootfs: HashSet::default(), broken_links: HashSet::default(), ptree: Vec::default() };
         rf.scan();
 
         rf
@@ -47,11 +50,12 @@ impl RootFS {
         }
 
         for x in src {
-            for y in self.expand_target(x) {
+            for y in Self::expand_target(x, false) {
                 rfs.remove(&y);
             }
         }
 
+        rfs.extend(self.broken_links.to_owned());
         rfs.into_iter().collect::<Vec<PathBuf>>()
     }
 
@@ -61,7 +65,7 @@ impl RootFS {
     /// the database still pointing to the old-fashioned location (e.g. "/bin").
     /// In this case fall-back is used to find also in "/bin/<binary>" if
     /// search for the "/usr/bin/<binary>" fails.
-    fn expand_target(&self, target: PathBuf) -> Vec<PathBuf> {
+    pub fn expand_target(target: PathBuf, reverse: bool) -> Vec<PathBuf> {
         let mut p = PathBuf::from(&target);
         let fname = p.file_name().unwrap().to_owned();
 
@@ -103,7 +107,7 @@ impl RootFS {
 
     /// Diff the whole rootfs to see what's inside.
     fn scan(&mut self) {
-        for rde in walkdir::WalkDir::new("/").follow_root_links(true).contents_first(true).follow_links(false) {
+        for rde in walkdir::WalkDir::new("/").follow_root_links(true).contents_first(true).follow_links(true) {
             match rde {
                 Ok(entry) => {
                     let p = entry.into_path();
@@ -121,12 +125,17 @@ impl RootFS {
                         continue;
                     }
 
-                    if p.is_file() {
-                        self.rootfs.insert(p);
+                    if p.is_file() && p.exists() {
+                        if let Ok(p) = fs::canonicalize(p) {
+                            self.rootfs.insert(p);
+                        }
                     }
                 }
                 Err(err) => {
-                    log::warn!("Unable to access \"{}\"", err);
+                    log::debug!("Unable to access \"{}\"", err);
+                    if let Some(p) = err.path() {
+                        self.broken_links.insert(p.to_path_buf());
+                    }
                 }
             }
         }

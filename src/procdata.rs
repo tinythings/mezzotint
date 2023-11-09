@@ -1,7 +1,7 @@
 use crate::{
     filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
     profile::Profile,
-    rootfs,
+    rootfs::{self, RootFS},
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
     shcall::ShellScript,
 };
@@ -196,7 +196,7 @@ impl TintProcessor {
         // Scan content of all profile packages (if any)
         // and then let TextDataFilter removes what still should be removed.
         // The idea is to keep parts only relevant to the runtime.
-        log::debug!("Filtering packages");
+        log::debug!("Adding requested packages");
         let pscan = DebPackageScanner::new(Autodeps::Undef);
         for p in self.profile.get_packages() {
             log::debug!("Getting content of package \"{}\"", p);
@@ -225,6 +225,17 @@ impl TintProcessor {
         log::debug!("Filtering resources");
         ResourcesDataFilter::new(paths.clone().into_iter().collect::<Vec<PathBuf>>(), self.profile.to_owned(), self.autodeps)
             .filter(&mut paths);
+
+        // Remove package content before dissection
+        // XXX: Exlude .so binaries also from the Elf reader?
+        for p in self.profile.get_dropped_packages() {
+            log::debug!("Removing dropped package contents from \"{}\"", p);
+            for p in pscan.get_package_contents(p.to_string())? {
+                for p in RootFS::expand_target(p, true) {
+                    paths.remove(&p);
+                }
+            }
+        }
 
         // Scan rootfs
         log::debug!("Scanning existing rootfs");
