@@ -88,7 +88,7 @@ impl RootFS {
                 let dpth = PathBuf::from(PathBuf::from(fdir).join(&fname).to_str().unwrap().to_string());
                 let dlnk = PathBuf::from(dpth.to_str().unwrap().strip_prefix("/usr").unwrap());
 
-                for p in vec![dpth, dlnk] {
+                for p in [dpth, dlnk] {
                     if p.exists() {
                         out.push(p);
                     }
