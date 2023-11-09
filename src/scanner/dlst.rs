@@ -37,7 +37,9 @@ impl<'a> ContentFormatter<'a> {
 
         if let Some(fsr) = self.fs_removed {
             for p in fsr {
-                total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
+                if p.exists() {
+                    total_size += p.size_on_disk_fast(&p.metadata().unwrap()).unwrap();
+                }
                 total_files += 1;
                 log::debug!("  - {}", p.to_str().unwrap());
             }
