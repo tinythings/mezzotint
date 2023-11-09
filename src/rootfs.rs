@@ -77,8 +77,20 @@ impl RootFS {
             ("/usr/lib64/".to_string(), "/lib64/".to_string()),
         ]);
 
-        for (_fd, fl) in aliases {
-            if fdir.starts_with(&fl) {
+        for (fd, fl) in aliases {
+            if reverse && fdir.starts_with(&fd) {
+                let mut out: Vec<PathBuf> = Vec::default();
+
+                let dpth = PathBuf::from(PathBuf::from(fdir).join(&fname).to_str().unwrap().to_string());
+                let dlnk = PathBuf::from(dpth.to_str().unwrap().strip_prefix("/usr").unwrap());
+
+                for p in vec![dpth, dlnk] {
+                    if p.exists() {
+                        out.push(p);
+                    }
+                }
+                return out;
+            } else if fdir.starts_with(&fl) {
                 return vec![
                     PathBuf::from(PathBuf::from(fdir).join(&fname).to_str().unwrap().to_string()),
                     PathBuf::from(PathBuf::from(format!("/usr{}", fdir)).join(fname).to_str().unwrap().to_string()),
