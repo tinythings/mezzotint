@@ -15,5 +15,4 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_show_sourcelink = False
-#html_theme = 'karma_sphinx_theme'
 html_static_path = ['_static']
