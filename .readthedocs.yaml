@@ -12,9 +12,9 @@ build:
 
 sphinx:
   builder: html
-  configuration: doc/conf.py
+  configuration: docs/conf.py
   fail_on_warning: false
 
 python:
   install:
-    - requirements: doc/requirements.txt
+    - requirements: docs/requirements.txt
