@@ -3,15 +3,17 @@
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
 # Required
-# version: 2
+version: 2
 
-#build:
-#  os: ubuntu-22.04
-#  tools:
-#    python: "3.10"
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.12"
 
-#sphinx:
-#   configuration: doc/conf.py
+sphinx:
+  builder: html
+  configuration: doc/conf.py
+  fail_on_warning: false
 
 python:
   install:
