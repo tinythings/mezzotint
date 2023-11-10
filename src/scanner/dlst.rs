@@ -2,11 +2,15 @@
 Data lister (fancy STDOUT printer)
 */
 
-use crate::filters::resources;
+use crate::{
+    filters::resources,
+    scanner::{debftrace::DebPkgFileTrace, traceitf::PkgFileTrace},
+};
 use bytesize::ByteSize;
 use colored::Colorize;
 use filesize::PathExt;
 use std::{
+    collections::HashSet,
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
 };
@@ -110,6 +114,17 @@ impl<'a> ContentFormatter<'a> {
             d_size += p.metadata().unwrap().len();
         }
 
+        // Collect preserved packages
+        let mut pkgs: HashSet<String> = HashSet::default();
+        let mut pt = DebPkgFileTrace::new();
+        for p in self.fs_data {
+            if let Some(pkg) = pt.trace(p.clone()) {
+                pkgs.insert(pkg);
+            }
+        }
+        let mut pkgs = pkgs.into_iter().collect::<Vec<String>>();
+        pkgs.sort();
+
         // Print the summary
         println!(
             "\nRemoved {} files, releasing {} of a disk space",
@@ -128,7 +143,7 @@ impl<'a> ContentFormatter<'a> {
                 ByteSize::b(j_size).to_string().bright_yellow()
             );
         }
-        println!("");
+        println!("Kept {} packages as follows:\n  {}\n", pkgs.len().to_string().bright_yellow(), pkgs.join(", "));
     }
 
     /// Get dir/name split, painted accordingly
