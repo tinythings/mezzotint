@@ -1,4 +1,5 @@
 pub mod binlib;
+pub mod debftrace;
 pub mod debpkg;
 pub(crate) mod dlst;
 pub mod general;
