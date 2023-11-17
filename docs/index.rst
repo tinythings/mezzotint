@@ -57,6 +57,11 @@ Limitations
 2. At the moment integration with a package manager is implemented only for Debian package manager, covering only "Debian family" distributions, such as Ubuntu, Mint, Debian itself etc
 3. It is tested only on Ubuntu LTS 22.04... 😃
 
+.. sidebar:: Links
+
+   * `GitHub Repository <https://github.com/isbm/mezzotint>`__
+
+   * `GitHub Issues Tracker <https://github.com/isbm/mezzotint/issues>`__
 
 Contributing
 -------------
@@ -64,9 +69,3 @@ Contributing
 Best way to make progress is to open an issue (good 👍) or submit a Pull Request (awesome 🤩) on the GitHub.
 
 And just in case you don't know how to implement it in Rust, but you still want something cool to happen, then please fill-in an issue using issue tracker.
-
-.. sidebar:: Links
-
-   * `GitHub Repository <https://github.com/isbm/mezzotint>`__
-
-   * `GitHub Issues Tracker <https://github.com/isbm/mezzotint/issues>`__
