@@ -16,6 +16,7 @@ Welcome to Mezzotint documentation!
    :maxdepth: 1
 
    overview
+   installation
 
 
 Concept
