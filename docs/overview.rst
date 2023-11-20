@@ -62,5 +62,5 @@ Resources in an **Application Bundle** are contained within the bundle itself an
 In summary, an application bundle is a packaging format for organizing and distributing applications on a specific operating system, while a Linux container is a technology for creating lightweight, isolated environments that can run applications independently across different systems.
 
 Goal
-====
+----
 The goal of the Mezzotint is to combine the best of it into one container.
