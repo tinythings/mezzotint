@@ -17,6 +17,7 @@ Welcome to Mezzotint documentation!
 
    overview
    installation
+   quickstart
    usage
 
 
