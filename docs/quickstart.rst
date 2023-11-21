@@ -17,9 +17,9 @@ If you've already provisioned and configured your forthcoming container mountpoi
 The command above will:
 
 -a  try to automatically resolve all necessary packages
--x  for ``/usr/bin/emacs-nox`` binary
+-x  for ``/usr/bin/emacs-nox`` binary `inside your container`
 -r  within the mounted root filesystem ``/path/to/the/mountpoint``
--t  but will not apply anything (dry-run)
+-t  but will not apply anything just yet (dry-run)
 
 Alongside detailed listings of each file in the system, the output should conclude with a summary akin to the following:
 
