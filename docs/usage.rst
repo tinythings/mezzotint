@@ -1,9 +1,8 @@
 .. note::
     This document describes the basic usage of the Mezzotint tool.
 
-Full Usage
-==========
-
+Detailed Usage
+==============
 
 Provisioning of a Base Container
 --------------------------------
@@ -11,17 +10,39 @@ Provisioning of a Base Container
 Adding Software
 ---------------
 
-Define Profile
---------------
+Profile Definition
+------------------
 
-Dry Run
--------
+Targets
+^^^^^^^
 
-Apply the Changes
+Packages
+^^^^^^^^
+
+Configuration
+^^^^^^^^^^^^^
+
+Filters
+"""""""
+
+Data removal
+""""""""""""
+
+Data preservation
+"""""""""""""""""
+
+
+Running Mezzotint
 -----------------
 
+Dry Run
+^^^^^^^
+
+Applying the Changes
+^^^^^^^^^^^^^^^^^^^^
+
 Test it!
---------
+^^^^^^^^
 
 Next Steps
 ----------
