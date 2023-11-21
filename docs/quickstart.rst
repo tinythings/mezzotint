@@ -38,4 +38,4 @@ Alongside detailed listings of each file in the system, the output should conclu
 
     [21/09/2023 15:16:06] - WARN: This was a dry-run. Changes were not applied.
 
-Once you think this is acceptable result, re-run the same command, without ``--dry-run`` option (``-t``). Your container still should work. Hopefully. :-)
+Obviously keeping 300M container for Emacs is not very optimal, but is good start. Once you think this is acceptable result, re-run the same command, without ``--dry-run`` option (``-t``). Your container still should work. Hopefully. :-)
