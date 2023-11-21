@@ -21,14 +21,20 @@ The following process was tested on Ubuntu 22.04 LTS:
 
 - Clone the repository:
 
-  ``git clone https://github.com/isbm/mezzotint``
+  .. code-block:: shell
+
+    git clone https://github.com/isbm/mezzotint
 
 - Change directory to the newly created:
 
-  ``cd mezzotint``
+  .. code-block:: shell
+
+    cd mezzotint
 
 - Run command:
 
-  ``make release``
+  .. code-block:: shell
+
+    make release
 
 - If you set it all up correctly, it should compile. Then navigate to ``target/release`` and copy ``mezzotint`` binary anywhere you want (typically ``/usr/bin``).
