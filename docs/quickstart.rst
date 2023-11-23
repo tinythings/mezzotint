@@ -1,6 +1,8 @@
 .. note::
     This document describes the basic usage of the Mezzotint tool.
 
+.. _quickstart:
+
 Quick Start
 ===========
 
