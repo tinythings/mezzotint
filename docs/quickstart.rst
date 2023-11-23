@@ -8,9 +8,13 @@ Quick Start
 
 The primary aim of the Mezzotint tool is to minimize your container's size by eliminating anything considered "junk" — items that are never used, unnecessary, and serve no purpose within your container.
 
-To quickly start, you should already have `somewhere` a mounted container root filesystem. We recommend to use `Buildah <https://buildah.io>`__, but you may choose other similar tools.
+.. attention::
 
-If you've already provisioned and configured your forthcoming container mountpoint with the application but haven't shared it yet, run Mezzotint on that mountpoint, specifying it as the `system root`, like so:
+    This document does not explains how to provision a root filesystem with additional software.
+
+To quickly start, you should already have `somewhere` a mounted container root filesystem with installed Emacs without X11 support (terminal only). For the process, we recommend to use `Buildah <https://buildah.io>`__, but you may choose other similar tools. If you don't know how to do this, navigate to :doc:`/usage` for full guidance.
+
+And so if you've already provisioned and configured your forthcoming container mountpoint with the application but haven't shared it yet, run Mezzotint on that mountpoint, specifying it as the `system root`, like so:
 
 .. code-block:: shell
 
