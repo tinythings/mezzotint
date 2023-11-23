@@ -229,6 +229,11 @@ For example, if your working container is currently mounted as ``/var/tmp/mycont
 
     mezzotint -t -p mycontainer.yaml -r /var/tmp/mycontainer
 
+This operation will calculate what can be classified as a "junk" and will remove it, displaying only what will be staying in your container in a future.
+
+Reviewing "dry-run" Results
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 This will perform an excessive output to the terminal, listing all directories and files that will be preserved, calculating their size etc. At the end Mezzotint will print the total results, like how much disk space will be freed and how much space preserved etc. Also Mezzotint will print the list of preserved packages.
 
 For example:
@@ -304,6 +309,11 @@ The output also found additional 22 junk files. Scrolling this output, they are 
       ╰─ ⚠️  PROBLEMS
     Files: 21, Size: 12.2 MB
 
+We are still losing 12 megabytes. Let's get rid of them too.
+
+Tighting It All Up
+^^^^^^^^^^^^^^^^^^
+
 These files are occupying 12 megabytes without any kind of practical need. You can choose either to keep these or you can do something about it. One way is to let Mezzotint deal with it, using ``--autodeps`` option with flag ``tight``. This flag tells Mezzotint to actually not to look for dependencies, but only make a container "tight", i.e. remove all data that is considered not important:
 
 .. code-block:: shell
@@ -317,6 +327,9 @@ This operation will additionally shave off 12Mb from this container. Now it is a
     Once changes are applied, the operation cannot be undone!
 
 For the reasons that the operation cannot be undone while the entire container might be permanently damaged for different reasons like wrong/incomplete profile, missing packages etc, it is recommended to pre-commit "fat" finished container to the local storage and restore working container from it, using Buildah.
+
+Applying the Changes Permanently
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To apply the changes, simply remove ``--dry-run`` or ``-t`` flag, and re-run Mezzotint:
 
@@ -332,6 +345,11 @@ You should be seeing the following output:
     [23/09/2023 13:01:30] - INFO: Getting profile at profile.yaml
     [23/09/2023 13:01:31] - INFO: Automatically removing potential junk resources
     [23/09/2023 13:01:31] - INFO: Finished. Hopefully it even works :-)
+
+Hopefully yes. Now it is time to review and test it.
+
+Reviewing the Result
+^^^^^^^^^^^^^^^^^^^^
 
 At this point, if you navigate to ``/var/tmp/mycontainer`` and list it, you will see that the root filesystem is significantly smaller than usual:
 
