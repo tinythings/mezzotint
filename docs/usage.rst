@@ -111,33 +111,84 @@ Filters
 .. code-block:: yaml
 
     filters:
-        # Matches localisation data
-        - l10n
+        - <NAME>
 
-        # Matches internationalisation data
-        - i18n
+This is the list of filter names:
 
-        # Matches all possible documentation, licenses, howtos etc
-        - doc
+l10n
+    Match any kind of localisation files
 
-        # Matches manpages
-        - man
+i18n
+    Match internationalisation files
 
-        # Matches everything related to the logging
-        - log
+doc
+    Matches all possible documentation, licenses, howtos etc
 
-        # Matches empty directories or directories with emnpty subdirectories
-        - dir
+man
+    Match all manpages on the file system
 
-        # Replaces all above
-        - all
+log
+    Matches logfiles
+
+dir
+    Matches empty directories or directories with empty subdirectories
+
+pic
+    Matches any graphics data (images, pictures, pictograms, vector data etc)
+
+arc
+    Matches any kind of archives (tarballs, zip archives etc)
+
+all
+    Replaces all above. If you want to use all the filters listed above, simply use this one instead
 
 
 Data removal
 """"""""""""
 
+Some specific paths that were not automatically detected as not needed, still can be explicitly scheduled for the removal. This is used in the section ``prune``, which is just a list of paths with (optionally) Unix globbing:
+
+.. code-block:: yaml
+
+    prune:
+        - /usr/share/bug/*
+        - /usr/share/lintian/*
+
 Data preservation
 """""""""""""""""
+
+Data preservation works the same way as in the chapter "Date removal", just in the section ``keep``. For example:
+
+.. code-block:: yaml
+
+    keep:
+        - /etc
+        - /usr/bin/*
+
+Scripting Hooks
+"""""""""""""""
+
+Hooks are basic commands, but can be also a proper shell scripts with the shebang. There are two types of hooks:
+
+- Before
+- After
+
+Example:
+
+.. code-block:: yaml
+
+    hooks:
+        before: |
+            echo "Hello"
+
+        after: |
+            echo "Bye"
+
+In a nutshell, one can run a script before and after `calculation` of what junk is.
+
+.. attention::
+
+    In both cases `before` and `after`, hooks are always called **before the actual data removal**, because there is no guarantee that the very runtime of the script will not be removed and thus fail to run the script. That is, `before` hook is running right before Mezzotint is calculating what data needs to be removed etc.
 
 Profile Example
 ---------------
