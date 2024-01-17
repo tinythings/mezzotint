@@ -3,3 +3,4 @@
 tmp/
 docs/_build/*
 docs/_static/*
+package/*
