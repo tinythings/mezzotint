@@ -11,6 +11,9 @@ Every container (or intended App Bundle) necessitates a corresponding Profile. T
 Provisioning a Base Container
 --------------------------------
 
+.. warning::
+    This is just an example usage, where `Buildah <https://buildah.io>`__ was chosen as a container builder. You can use any other container builders, like Docker or Kiwi etc. To get more familiar with Buildah, please refer to the `documentation <https://github.com/containers/buildah/tree/main/docs/tutorials>`__.
+
 There is no limitations with what kind of tooling one should provision a container. However, in current workflow it is recommended to use `Buildah <https://buildah.io>`__ — a tool that facilitates building Open Container Initiative (OCI) container images.
 
 Provisioning a container from a package-based distribution can vary across different distributions. This specific document outlines the process using Ubuntu 22.04 LTS, yet the procedure should remain largely consistent across other versions of Ubuntu or Debian.
@@ -25,6 +28,10 @@ To provision a base root filesystem, Debian is using `debootstrap <https://linux
 
     # Mount a new container and catch the mount point
     C_MNT=$(buildah mount $C_NAME)
+
+.. note::
+
+    The particular example above should be called as ``root`` (UID 0) user.
 
 In this case ``C_NAME`` will contain a container name, usually defaults to `"working-container"`. The variable ``C_MNT`` contains the full path to the mount point. At this point it is a time to provision that container, using ``debootstrap`` utility, passing it the mount point path as following:
 
@@ -42,7 +49,8 @@ The root filesystem setup is now finished, but it's quite minimal, only includin
 
 .. code-block:: shell
 
-    echo -e "deb http://de.archive.ubuntu.com/ubuntu jammy main universe multiverse restricted\n" >> $MNT/etc/apt/sources.list
+    echo -e "deb http://de.archive.ubuntu.com/ubuntu jammy main universe multiverse restricted\n" \
+      >> $C_MNT/etc/apt/sources.list
 
 Although it's possible to run this root filesystem as a container and begin installations within it, this document employs an ``old-school`` approach of simply changing the root (which is also functional) as follows:
 
