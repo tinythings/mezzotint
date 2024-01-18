@@ -14,9 +14,13 @@ man:
 	pandoc --standalone --to man docs/manpages/mezzotint.8.md -o docs/manpages/mezzotint.8
 
 tar:
+	# Cleanup
 	rm -rf package/${ARC_NAME}
+
 	cargo vendor
-	mkdir -p package/${ARC_NAME}
+	mkdir -p package/${ARC_NAME}/.cargo
+	cp .vendor.toml package/${ARC_NAME}/.cargo/config.toml
+
 	cp LICENSE package/${ARC_NAME}
 	cp README.md package/${ARC_NAME}
 	cp Cargo.lock package/${ARC_NAME}
