@@ -1,13 +1,48 @@
-use std::{fs, io::Error, path::PathBuf, process::Command};
+use std::{default, fs, io::Error, path::PathBuf, process::Command};
+
+use filesize::PathExt;
 
 pub(crate) trait Scanner {
     /// Scan path
-    fn scan(&mut self, pth: PathBuf) -> Vec<PathBuf>;
+    fn scan(&mut self, pth: PathBuf) -> ScannerResult;
 
     /// Add packages to be excluded from the scan
     fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self;
+
+    fn contents(&mut self, pkgname: String) -> Result<ScannerResult, std::io::Error>;
 }
 
+/// Results of the scanner
+#[derive(Default)]
+pub struct ScannerResult {
+    paths: Vec<PathBuf>,
+    size: i128,
+}
+
+impl ScannerResult {
+    /// Constructor
+    pub fn new(paths: Vec<PathBuf>) -> Self {
+        ScannerResult { paths, size: 0 }
+    }
+
+    /// Returns package total size on the disk
+    pub fn get_size(&mut self) -> i128 {
+        // Lazy size scanner, in some cases this is not needed.
+        if self.paths.len() > 0 && self.size == 0 {
+            for p in &self.paths {
+                if let Ok(s) = p.as_path().size_on_disk() {
+                    self.size += s as i128;
+                }
+            }
+        }
+        self.size
+    }
+
+    /// Returns package paths
+    pub fn get_paths(&self) -> &[PathBuf] {
+        &self.paths
+    }
+}
 pub struct ScannerCommons {
     elfrd_paths: Vec<String>,
     elfrd_p: String,
