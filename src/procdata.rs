@@ -183,11 +183,11 @@ impl TintProcessor {
 
         for target_path in self.profile.get_targets() {
             log::debug!("Find binary dependencies for {target_path}");
-            paths.extend(ElfScanner::new().scan(Path::new(target_path).to_owned()));
+            paths.extend(ElfScanner::new().scan(Path::new(target_path).to_owned()).get_paths().to_owned());
 
             log::debug!("Find package dependencies for {target_path}");
             // XXX: This will re-scan again and again, if target_path belongs to the same package
-            paths.extend(DebPackageScanner::new(self.autodeps).scan(Path::new(target_path).to_owned()));
+            paths.extend(DebPackageScanner::new(self.autodeps).scan(Path::new(target_path).to_owned()).get_paths().to_owned());
 
             // Add the target itself
             paths.insert(Path::new(target_path).to_owned());
@@ -253,7 +253,7 @@ impl TintProcessor {
             if self.profile.has_post_hook() {
                 log::debug!("Post-hook:\n{}", self.profile.get_post_hook());
             }
-            ContentFormatter::new(&paths).set_removed(&p).format();
+            ContentFormatter::new(&paths).set_removed(&p).set_bundled_packages(self.profile.get_bundled_packages()).format();
         } else {
             // Run post-hook (doesn't affect changes apply)
             if self.profile.has_post_hook() {
