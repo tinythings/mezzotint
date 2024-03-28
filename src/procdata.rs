@@ -227,7 +227,7 @@ impl TintProcessor {
             .filter(&mut paths);
 
         // Remove package content before dissection
-        // XXX: Exlude .so binaries also from the Elf reader?
+        // XXX: Exclude .so binaries also from the Elf reader?
         for p in self.profile.get_dropped_packages() {
             log::debug!("Removing dropped package contents from \"{}\"", p);
             for p in pscan.get_package_contents(p.to_string())? {
