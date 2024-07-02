@@ -1,8 +1,3 @@
-use chrono::Local;
-use flate2::{write::GzEncoder, Compression};
-use log::{info, warn};
-use tar::Builder;
-
 use crate::{
     filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
     profile::Profile,
@@ -10,14 +5,17 @@ use crate::{
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
     shcall::ShellScript,
 };
-use core::arch;
+use chrono::Local;
+use flate2::{write::GzEncoder, Compression};
+use log::info;
 use std::{
     collections::HashSet,
     fs::{self, canonicalize, remove_file, DirEntry, File},
     io::{Error, ErrorKind},
-    os::{fd::AsRawFd, unix},
+    os::unix,
     path::{Path, PathBuf},
 };
+use tar::Builder;
 
 /// Autodependency mode
 #[derive(Clone, Copy, PartialEq, Debug)]

@@ -7,7 +7,6 @@ use crate::{
     },
 };
 use colored::Colorize;
-use filesize::PathExt;
 use std::{
     collections::HashSet,
     io::{Error, ErrorKind},

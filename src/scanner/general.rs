@@ -1,4 +1,4 @@
-use std::{default, fs, io::Error, path::PathBuf, process::Command};
+use std::{fs, io::Error, path::PathBuf, process::Command};
 
 use filesize::PathExt;
 
