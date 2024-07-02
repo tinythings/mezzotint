@@ -2,6 +2,7 @@
 Data lister (fancy STDOUT printer)
 */
 
+use super::{debpkg::DebPackageScanner, general::Scanner};
 use crate::{
     filters::resources,
     procdata,
@@ -15,9 +16,6 @@ use std::{
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
 };
-use sys_info::proc_total;
-
-use super::{debpkg::DebPackageScanner, general::Scanner};
 
 /// ContentFormatter is a lister for finally gathered information,
 /// that needs to be displayed on the screen for the user for review

@@ -7,7 +7,7 @@ mod rootfs;
 mod scanner;
 mod shcall;
 use crate::profile::Profile;
-use clap::{error::ErrorKind, ArgMatches, Command};
+use clap::{ArgMatches, Command};
 use colored::Colorize;
 use std::{
     env,

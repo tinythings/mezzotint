@@ -7,9 +7,8 @@
     symlinks in place.
 */
 
-use std::path::PathBuf;
-
 use super::{debftrace::DebPkgFileTrace, rpmftrace::RpmPkgFileTrace, traceitf::PkgFileTrace};
+use std::path::PathBuf;
 
 pub struct DeltaFinder {
     dupes: Vec<PathBuf>,
