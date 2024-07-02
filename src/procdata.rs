@@ -167,13 +167,20 @@ impl TintProcessor {
                 fs::create_dir_all(dst.parent().unwrap())?;
             }
 
-            fs::copy(src, dst)?;
-            info!("Archiving {:?}", src);
+            if !src.is_symlink() {
+                info!("Archiving {:?} file", src);
+                fs::copy(src, dst)?;
+            } else {
+                info!("Archiving {:?} symlink", src);
+                let lnk = fs::read_link(src)?;
+                let _ = unix::fs::symlink(&lnk, dst);
+            }
         }
 
         // targz the content
         let archname = format!("{}.tar.gz", tmpdir.as_os_str().to_str().unwrap());
         let mut builder = Builder::new(GzEncoder::new(File::create(&archname)?, Compression::best()));
+        builder.follow_symlinks(false); // don't generate junk
         builder.append_dir_all(self.copy_to.to_owned().unwrap().file_name().unwrap().to_str().unwrap(), &tmpdir)?;
         builder.into_inner()?.finish()?;
 
