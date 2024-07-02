@@ -100,6 +100,7 @@ fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
 
 /// Main
 fn main() -> Result<(), std::io::Error> {
+    let default_empty = String::from("");
     let args: Vec<String> = env::args().collect();
     let mut cli = clidef::cli(VERSION);
 
@@ -115,6 +116,14 @@ fn main() -> Result<(), std::io::Error> {
     // Since --help is disabled on purpose in CLI definition, it is checked manually.
     if *params.get_one::<bool>("help").unwrap() {
         cli.print_help().unwrap();
+        return Ok(());
+    }
+
+    if *params.get_one::<bool>("delta-only").unwrap() {
+        if sys_info::os_type().unwrap_or_default().to_lowercase() != "linux" {
+            return Err(std::io::Error::new(std::io::ErrorKind::Unsupported, "Unsupported OS. Only Linux for now..."));
+        }
+
         return Ok(());
     }
 
@@ -143,6 +152,7 @@ fn main() -> Result<(), std::io::Error> {
         .set_profile(get_profile(cli, &params))
         .set_dry_run(params.get_flag("dry-run"))
         .set_autodeps(params.get_one::<String>("autodeps").unwrap().to_string())
+        .copy_to(params.get_one::<String>("copy").unwrap_or(&default_empty))?
         .start()
     {
         log::error!("{}", err);

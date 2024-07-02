@@ -1,6 +1,5 @@
-use crate::rootfs::RootFS;
-
 use super::traceitf::PkgFileTrace;
+use crate::rootfs::RootFS;
 use std::{
     collections::HashMap,
     fs::{self, DirEntry},

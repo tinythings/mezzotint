@@ -13,6 +13,7 @@ pub struct PConfig {
 pub struct PTargets {
     targets: Vec<String>,
     packages: Option<Vec<String>>,
+    bundled_packages: Option<Vec<String>>,
     config: Option<PConfig>,
     hooks: Option<PHooks>,
 }
@@ -38,6 +39,7 @@ pub struct Profile {
     f_expl_keep: Vec<PathBuf>,
 
     packages: Vec<String>,
+    bundled_packages: Vec<String>,
     dropped_packages: Vec<String>,
     targets: Vec<String>,
 
@@ -61,6 +63,7 @@ impl Profile {
             f_arc: true,
 
             packages: vec![],
+            bundled_packages: vec![],
             dropped_packages: vec![],
             targets: vec![],
             f_expl_prune: vec![],
@@ -141,6 +144,13 @@ impl Profile {
                 }
 
                 self.packages.push(p);
+            }
+        }
+
+        // Pass bundled packages
+        if let Some(pkgs) = p.bundled_packages {
+            for p in &pkgs {
+                self.bundled_packages.push(p.to_string());
             }
         }
 
@@ -289,6 +299,11 @@ impl Profile {
     /// Get packages
     pub fn get_packages(&self) -> &Vec<String> {
         &self.packages
+    }
+
+    /// Get bundled packages configuration
+    pub fn get_bundled_packages(&self) -> &Vec<String> {
+        &self.bundled_packages
     }
 
     /// Get dropped packages

@@ -1,3 +1,4 @@
+use super::general::ScannerResult;
 use crate::scanner::general::{Scanner, ScannerCommons};
 use std::{collections::HashSet, path::PathBuf};
 
@@ -37,13 +38,20 @@ impl ElfScanner {
 
 impl Scanner for ElfScanner {
     /// Scan for the required dynamic libraries in an executable
-    fn scan(&mut self, pth: PathBuf) -> Vec<PathBuf> {
+    fn scan(&mut self, pth: PathBuf) -> ScannerResult {
         log::debug!("Scanning for dependencies in {}", pth.to_str().unwrap());
-        self.get_dynlibs(pth.to_str().unwrap().to_string()).iter().map(PathBuf::from).collect::<Vec<PathBuf>>()
+        ScannerResult::new(
+            self.get_dynlibs(pth.to_str().unwrap().to_string()).iter().map(PathBuf::from).collect::<Vec<PathBuf>>(),
+        )
     }
 
     /// Bogus trait implementation, does nothing in this case
     fn exclude(&mut self, _: Vec<String>) -> &mut Self {
         self
+    }
+
+    /// Dummy
+    fn contents(&mut self, _pkgname: String) -> Result<ScannerResult, std::io::Error> {
+        Err(std::io::Error::new(std::io::ErrorKind::Unsupported, ""))
     }
 }

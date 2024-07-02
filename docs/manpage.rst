@@ -24,6 +24,9 @@ The following options are available:
 -t, --dry-run            Do not remove anything, only display what will be removed
 -a, --autodeps <mode>    Auto-add package dependencies. `NOTE: This can increase the size, but might not always be useful` Default value is set to `none`. Other possible values: `free`, `clean`, `tight` and default `none`.
 -r, --root <root>        Root filesystem, e.g. mountpoint of an image
+-c, --copy <copy>        Collect all library dependencies of a target executable,
+                         and copy everything to a specified directory.
+
 
 Filters
 -------

@@ -1,7 +1,7 @@
 use crate::{
     procdata::Autodeps,
     scanner::{
-        general::{Scanner, ScannerCommons},
+        general::{Scanner, ScannerCommons, ScannerResult},
         tracedeb,
         traceitf::PkgDepTrace,
     },
@@ -93,7 +93,12 @@ impl DebPackageScanner {
 }
 
 impl Scanner for DebPackageScanner {
-    fn scan(&mut self, pth: PathBuf) -> Vec<PathBuf> {
+    fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self {
+        self.excluded_packages.extend(pkgs);
+        self
+    }
+
+    fn scan(&mut self, pth: PathBuf) -> ScannerResult {
         log::debug!("Scanning package contents for {:?}", pth.to_str());
 
         let mut out: Vec<PathBuf> = vec![];
@@ -130,11 +135,14 @@ impl Scanner for DebPackageScanner {
             }
         }
 
-        out
+        // Return as an encapsulated object for future reuses
+        ScannerResult::new(out)
     }
 
-    fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self {
-        self.excluded_packages.extend(pkgs);
-        self
+    fn contents(&mut self, pkgname: String) -> Result<ScannerResult, Error> {
+        match self.get_package_contents(pkgname) {
+            Ok(fp) => Ok(ScannerResult::new(fp)),
+            Err(e) => Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e)),
+        }
     }
 }

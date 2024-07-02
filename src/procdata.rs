@@ -5,13 +5,17 @@ use crate::{
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
     shcall::ShellScript,
 };
-use std::fs::{self, canonicalize, remove_file, DirEntry, File};
+use chrono::Local;
+use flate2::{write::GzEncoder, Compression};
+use log::info;
 use std::{
     collections::HashSet,
-    io::Error,
+    fs::{self, canonicalize, remove_file, DirEntry, File},
+    io::{Error, ErrorKind},
     os::unix,
     path::{Path, PathBuf},
 };
+use tar::Builder;
 
 /// Autodependency mode
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -29,6 +33,7 @@ pub struct TintProcessor {
     dry_run: bool,
     autodeps: Autodeps,
     lockfile: PathBuf,
+    copy_to: Option<PathBuf>, // do not erase unneeded, but instead extract content into an archive
 }
 
 impl TintProcessor {
@@ -39,6 +44,7 @@ impl TintProcessor {
             dry_run: true,
             autodeps: Autodeps::Free,
             lockfile: PathBuf::from("/.tinted.lock"),
+            copy_to: None,
         }
     }
 
@@ -66,8 +72,28 @@ impl TintProcessor {
         self
     }
 
+    // Set a path of an archive where to copy all the content,
+    // instead of erasing everything else from the given rootfs
+    pub fn copy_to(&mut self, dst: &str) -> Result<&mut Self, Error> {
+        if dst.is_empty() {
+            // Quietly bail-out
+            return Ok(self);
+        }
+
+        let p = PathBuf::from(dst);
+        if p.is_dir() {
+            return Err(Error::new(ErrorKind::InvalidData, format!("{:?} is a directory", p)));
+        } else if p.exists() {
+            return Err(Error::new(ErrorKind::AlreadyExists, format!("File {:?} already exists", p)));
+        }
+
+        self.copy_to = Some(p);
+
+        Ok(self)
+    }
+
     // Chroot to the mount point
-    fn switch_root(&self) -> Result<(), Error> {
+    fn switch_root(&mut self) -> Result<(), Error> {
         unix::fs::chroot(self.root.to_str().unwrap())?;
         std::env::set_current_dir("/")?;
 
@@ -126,6 +152,45 @@ impl TintProcessor {
         Ok(())
     }
 
+    /// Archive paths that needs to be preserved
+    #[allow(clippy::wrong_self_convention)]
+    fn into_archive(&self, paths: &Vec<PathBuf>) -> Result<(), Error> {
+        let tmpdir = PathBuf::from(format!(
+            "/tmp/{}-{}",
+            self.copy_to.as_ref().unwrap().file_name().unwrap().to_str().unwrap_or_default(),
+            Local::now().format("%Y%m%d%H%M%S")
+        ));
+
+        for src in paths {
+            let dst = tmpdir.join(src.strip_prefix("/").unwrap());
+            if !dst.parent().unwrap().exists() {
+                fs::create_dir_all(dst.parent().unwrap())?;
+            }
+
+            if !src.is_symlink() {
+                info!("Archiving {:?} file", src);
+                fs::copy(src, dst)?;
+            } else {
+                info!("Archiving {:?} symlink", src);
+                let lnk = fs::read_link(src)?;
+                let _ = unix::fs::symlink(&lnk, dst);
+            }
+        }
+
+        // targz the content
+        let archname = format!("{}.tar.gz", tmpdir.as_os_str().to_str().unwrap());
+        let mut builder = Builder::new(GzEncoder::new(File::create(&archname)?, Compression::best()));
+        builder.follow_symlinks(false); // don't generate junk
+        builder.append_dir_all(self.copy_to.to_owned().unwrap().file_name().unwrap().to_str().unwrap(), &tmpdir)?;
+        builder.into_inner()?.finish()?;
+
+        // Cleanup
+        fs::remove_dir_all(tmpdir)?;
+        info!("Package archive has been created at {:?}", self.root.join(archname.trim_start_matches('/')));
+
+        Ok(())
+    }
+
     fn ext_path(p: HashSet<PathBuf>, mut np: HashSet<PathBuf>) -> HashSet<PathBuf> {
         for tgt in p.iter() {
             if tgt.is_symlink() {
@@ -161,12 +226,12 @@ impl TintProcessor {
     }
 
     // Start tint processor
-    pub fn start(&self) -> Result<(), Error> {
+    pub fn start(&mut self) -> Result<(), Error> {
         self.switch_root()?;
 
         // Bail-out if the image is already processed
         if self.lockfile.exists() {
-            return Err(Error::new(std::io::ErrorKind::AlreadyExists, "This container seems already tinted."));
+            return Err(Error::new(ErrorKind::AlreadyExists, "This container seems already tinted."));
         }
 
         // Run pre-hook, if any
@@ -183,11 +248,11 @@ impl TintProcessor {
 
         for target_path in self.profile.get_targets() {
             log::debug!("Find binary dependencies for {target_path}");
-            paths.extend(ElfScanner::new().scan(Path::new(target_path).to_owned()));
+            paths.extend(ElfScanner::new().scan(Path::new(target_path).to_owned()).get_paths().to_owned());
 
             log::debug!("Find package dependencies for {target_path}");
             // XXX: This will re-scan again and again, if target_path belongs to the same package
-            paths.extend(DebPackageScanner::new(self.autodeps).scan(Path::new(target_path).to_owned()));
+            paths.extend(DebPackageScanner::new(self.autodeps).scan(Path::new(target_path).to_owned()).get_paths().to_owned());
 
             // Add the target itself
             paths.insert(Path::new(target_path).to_owned());
@@ -227,7 +292,7 @@ impl TintProcessor {
             .filter(&mut paths);
 
         // Remove package content before dissection
-        // XXX: Exlude .so binaries also from the Elf reader?
+        // XXX: Exclude .so binaries also from the Elf reader?
         for p in self.profile.get_dropped_packages() {
             log::debug!("Removing dropped package contents from \"{}\"", p);
             for p in pscan.get_package_contents(p.to_string())? {
@@ -253,10 +318,13 @@ impl TintProcessor {
             if self.profile.has_post_hook() {
                 log::debug!("Post-hook:\n{}", self.profile.get_post_hook());
             }
-            ContentFormatter::new(&paths).set_removed(&p).format();
+            ContentFormatter::new(&paths).set_removed(&p).set_bundled_packages(self.profile.get_bundled_packages()).format();
+        } else if self.copy_to.is_some() {
+            self.into_archive(&paths)?;
         } else {
-            // Run post-hook (doesn't affect changes apply)
+            // Erase mode
             if self.profile.has_post_hook() {
+                // Run post-hook (doesn't affect changes apply)
                 Self::call_script(self.profile.get_post_hook())?;
             }
             self.apply_changes(p)?;

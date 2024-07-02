@@ -2,8 +2,10 @@
 Data lister (fancy STDOUT printer)
 */
 
+use super::{debpkg::DebPackageScanner, general::Scanner};
 use crate::{
     filters::resources,
+    procdata,
     scanner::{debftrace::DebPkgFileTrace, traceitf::PkgFileTrace},
 };
 use bytesize::ByteSize;
@@ -21,16 +23,26 @@ pub struct ContentFormatter<'a> {
     fs_data: &'a Vec<PathBuf>,
     last_dir: String,
     fs_removed: Option<&'a Vec<PathBuf>>,
+    bundled_packages: Option<&'a Vec<String>>,
 }
 
 impl<'a> ContentFormatter<'a> {
     pub(crate) fn new(fs_data: &'a Vec<PathBuf>) -> Self {
-        Self { fs_data, last_dir: "".to_string(), fs_removed: None }
+        Self { fs_data, last_dir: "".to_string(), fs_removed: None, bundled_packages: None }
     }
 
     /// Set removed data
     pub(crate) fn set_removed(&mut self, r: &'a Vec<PathBuf>) -> &mut Self {
         self.fs_removed = Some(r);
+        self
+    }
+
+    /// Set known bundled packages from the profile, when creating system-bound AppBundle
+    pub(crate) fn set_bundled_packages(&mut self, bp: &'a Vec<String>) -> &mut Self {
+        if !bp.is_empty() {
+            return self;
+        }
+        self.bundled_packages = Some(bp);
         self
     }
 
@@ -51,6 +63,43 @@ impl<'a> ContentFormatter<'a> {
         (total_files, total_size)
     }
 
+    fn collect_package_data(&mut self) -> (Vec<String>, Vec<String>) {
+        // Collect preserved packages
+        let mut pkgs: HashSet<String> = HashSet::default();
+        let mut s_pkgs: Vec<String> = Vec::default();
+
+        // XXX: Depends on the system
+        let mut pt: Box<dyn PkgFileTrace> = Box::new(DebPkgFileTrace::new());
+
+        self.fs_data.iter().for_each(|p: &PathBuf| {
+            if let Some(pkg) = pt.trace(p.clone()) {
+                pkgs.insert(pkg);
+            }
+        });
+        let mut pkgs: Vec<String> = pkgs.into_iter().collect::<Vec<String>>();
+        pkgs.sort();
+
+        // Collect system-linked packages
+        if self.bundled_packages.is_some() {
+            for p in &pkgs {
+                if !self.bundled_packages.unwrap().contains(p) {
+                    s_pkgs.push(p.to_string());
+                }
+            }
+            s_pkgs.sort();
+        }
+
+        (pkgs, s_pkgs)
+    }
+
+    fn get_pkg_total_size(&mut self, pknames: Vec<String>) -> i128 {
+        let mut t: i128 = 0;
+        let mut ps = DebPackageScanner::new(procdata::Autodeps::Undef);
+        pknames.iter().for_each(|p| t += ps.contents(p.to_string()).unwrap_or_default().get_size());
+
+        t
+    }
+
     #[allow(clippy::println_empty_string)]
     pub(crate) fn format(&mut self) {
         let d_len = self.fs_data.len() - 1;
@@ -69,7 +118,7 @@ impl<'a> ContentFormatter<'a> {
             let (dname, mut fname) = self.dn(p);
 
             if self.last_dir != dname {
-                self.last_dir = dname.to_owned();
+                dname.clone_into(&mut self.last_dir);
                 t_leaf = "".to_string();
                 println!("\n{}", self.last_dir.bright_blue().bold());
                 println!("{}", "──┬──┄┄╌╌ ╌  ╌".blue());
@@ -114,16 +163,7 @@ impl<'a> ContentFormatter<'a> {
             d_size += p.metadata().unwrap().len();
         }
 
-        // Collect preserved packages
-        let mut pkgs: HashSet<String> = HashSet::default();
-        let mut pt = DebPkgFileTrace::new();
-        for p in self.fs_data {
-            if let Some(pkg) = pt.trace(p.clone()) {
-                pkgs.insert(pkg);
-            }
-        }
-        let mut pkgs = pkgs.into_iter().collect::<Vec<String>>();
-        pkgs.sort();
+        let (pkgs, s_pkgs) = self.collect_package_data();
 
         // Print the summary
         println!(
@@ -143,7 +183,25 @@ impl<'a> ContentFormatter<'a> {
                 ByteSize::b(j_size).to_string().bright_yellow()
             );
         }
-        println!("Kept {} packages as follows:\n  {}\n", pkgs.len().to_string().bright_yellow(), pkgs.join(", "));
+        println!(
+            "\n{} {}\n  {}\n",
+            pkgs.len().to_string().bright_yellow(),
+            "packages are needed for this component, as follows:".yellow(),
+            pkgs.join(", ")
+        );
+
+        if !s_pkgs.is_empty() {
+            println!(
+                "{} {} {} {}\n  {}\n",
+                s_pkgs.len().to_string().bright_yellow(),
+                "packages might be referencing the system packages, potentially freeing extra".yellow(),
+                ByteSize::b(self.get_pkg_total_size(s_pkgs.to_owned()) as u64).to_string().bright_yellow(),
+                "as follows:".yellow(),
+                s_pkgs.join(", ")
+            );
+        } else {
+            println!("No packages were delegated to the host system\n");
+        }
     }
 
     /// Get dir/name split, painted accordingly
