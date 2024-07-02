@@ -80,7 +80,7 @@ impl TintProcessor {
             return Ok(self);
         }
 
-        let mut p = PathBuf::from(dst);
+        let p = PathBuf::from(dst);
         if p.is_dir() {
             return Err(Error::new(ErrorKind::InvalidData, format!("{:?} is a directory", p)));
         } else if p.exists() {
