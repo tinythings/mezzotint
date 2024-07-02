@@ -19,7 +19,7 @@ pub struct DeltaFinder {
 
 impl DeltaFinder {
     pub fn new(rootfs: Option<PathBuf>) -> Self {
-        let debian_family = vec!["ubuntu", "debian", "mint"];
+        let debian_family = ["ubuntu", "debian", "mint"];
         //let redhat_family = vec!["redhat", "fedora", "suse", "sles", "opensuse-leap", "opensuse"];
 
         let os_id = sys_info::linux_os_release().unwrap().id().to_lowercase();
