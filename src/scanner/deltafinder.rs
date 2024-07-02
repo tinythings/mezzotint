@@ -1,5 +1,6 @@
 /*
     This is only useful if a container is a flake (https://github.com/Elektrobit/flake-pilot),
+    or a software needs to be cut out to the exactly same repository but a smaller size,
     i.e. is packaged for the very system and is guaranteed to be running on it.
 
     Delta finder will post-remove every file, which is *exactly* the same on the host machine,
