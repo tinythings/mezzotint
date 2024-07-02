@@ -7,7 +7,7 @@ use crate::{
 };
 use chrono::Local;
 use flate2::{write::GzEncoder, Compression};
-use log::info;
+use log::{info, warn};
 use std::{
     collections::HashSet,
     fs::{self, canonicalize, remove_file, DirEntry, File},
