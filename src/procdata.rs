@@ -153,6 +153,7 @@ impl TintProcessor {
     }
 
     /// Archive paths that needs to be preserved
+    #[allow(clippy::wrong_self_convention)]
     fn into_archive(&self, paths: &Vec<PathBuf>) -> Result<(), Error> {
         let tmpdir = PathBuf::from(format!(
             "/tmp/{}-{}",
