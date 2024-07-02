@@ -312,17 +312,15 @@ impl TintProcessor {
                 log::debug!("Post-hook:\n{}", self.profile.get_post_hook());
             }
             ContentFormatter::new(&paths).set_removed(&p).set_bundled_packages(self.profile.get_bundled_packages()).format();
+        } else if self.copy_to.is_some() {
+            self.into_archive(&paths)?;
         } else {
-            if self.copy_to.is_some() {
-                self.into_archive(&paths)?;
-            } else {
-                // Erase mode
-                if self.profile.has_post_hook() {
-                    // Run post-hook (doesn't affect changes apply)
-                    Self::call_script(self.profile.get_post_hook())?;
-                }
-                self.apply_changes(p)?;
+            // Erase mode
+            if self.profile.has_post_hook() {
+                // Run post-hook (doesn't affect changes apply)
+                Self::call_script(self.profile.get_post_hook())?;
             }
+            self.apply_changes(p)?;
         }
 
         Ok(())
