@@ -158,7 +158,7 @@ impl TintProcessor {
         let tmpdir = PathBuf::from(format!(
             "/tmp/{}-{}",
             self.copy_to.as_ref().unwrap().file_name().unwrap().to_str().unwrap_or_default(),
-            Local::now().format("%Y%m%d%H%M%S").to_string()
+            Local::now().format("%Y%m%d%H%M%S")
         ));
 
         for src in paths {
