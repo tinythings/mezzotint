@@ -1,3 +1,8 @@
+use chrono::Local;
+use flate2::{write::GzEncoder, Compression};
+use log::{info, warn};
+use tar::Builder;
+
 use crate::{
     filters::{dirs::PathsDataFilter, intf::DataFilter, resources::ResourcesDataFilter, texts::TextDataFilter},
     profile::Profile,
@@ -5,11 +10,12 @@ use crate::{
     scanner::{binlib::ElfScanner, debpkg::DebPackageScanner, dlst::ContentFormatter, general::Scanner},
     shcall::ShellScript,
 };
-use std::fs::{self, canonicalize, remove_file, DirEntry, File};
+use core::arch;
 use std::{
     collections::HashSet,
-    io::Error,
-    os::unix,
+    fs::{self, canonicalize, remove_file, DirEntry, File},
+    io::{Error, ErrorKind},
+    os::{fd::AsRawFd, unix},
     path::{Path, PathBuf},
 };
 
@@ -29,6 +35,7 @@ pub struct TintProcessor {
     dry_run: bool,
     autodeps: Autodeps,
     lockfile: PathBuf,
+    copy_to: Option<PathBuf>, // do not erase unneeded, but instead extract content into an archive
 }
 
 impl TintProcessor {
@@ -39,6 +46,7 @@ impl TintProcessor {
             dry_run: true,
             autodeps: Autodeps::Free,
             lockfile: PathBuf::from("/.tinted.lock"),
+            copy_to: None,
         }
     }
 
@@ -66,8 +74,28 @@ impl TintProcessor {
         self
     }
 
+    // Set a path of an archive where to copy all the content,
+    // instead of erasing everything else from the given rootfs
+    pub fn copy_to(&mut self, dst: &str) -> Result<&mut Self, Error> {
+        if dst.is_empty() {
+            // Quietly bail-out
+            return Ok(self);
+        }
+
+        let mut p = PathBuf::from(dst);
+        if p.is_dir() {
+            return Err(Error::new(ErrorKind::InvalidData, format!("{:?} is a directory", p)));
+        } else if p.exists() {
+            return Err(Error::new(ErrorKind::AlreadyExists, format!("File {:?} already exists", p)));
+        }
+
+        self.copy_to = Some(p);
+
+        Ok(self)
+    }
+
     // Chroot to the mount point
-    fn switch_root(&self) -> Result<(), Error> {
+    fn switch_root(&mut self) -> Result<(), Error> {
         unix::fs::chroot(self.root.to_str().unwrap())?;
         std::env::set_current_dir("/")?;
 
@@ -126,6 +154,37 @@ impl TintProcessor {
         Ok(())
     }
 
+    /// Archive paths that needs to be preserved
+    fn into_archive(&self, paths: &Vec<PathBuf>) -> Result<(), Error> {
+        let tmpdir = PathBuf::from(format!(
+            "/tmp/{}-{}",
+            self.copy_to.as_ref().unwrap().file_name().unwrap().to_str().unwrap_or_default(),
+            Local::now().format("%Y%m%d%H%M%S").to_string()
+        ));
+
+        for src in paths {
+            let dst = tmpdir.join(src.strip_prefix("/").unwrap());
+            if !dst.parent().unwrap().exists() {
+                fs::create_dir_all(dst.parent().unwrap())?;
+            }
+
+            fs::copy(&src, &dst)?;
+            info!("Archiving {:?}", src);
+        }
+
+        // targz the content
+        let archname = format!("{}.tar.gz", tmpdir.as_os_str().to_str().unwrap());
+        let mut builder = Builder::new(GzEncoder::new(File::create(&archname)?, Compression::best()));
+        builder.append_dir_all(self.copy_to.to_owned().unwrap().file_name().unwrap().to_str().unwrap(), &tmpdir)?;
+        builder.into_inner()?.finish()?;
+
+        // Cleanup
+        fs::remove_dir_all(tmpdir)?;
+        info!("Package archive has been created at {:?}", self.root.join(archname.trim_start_matches("/")));
+
+        Ok(())
+    }
+
     fn ext_path(p: HashSet<PathBuf>, mut np: HashSet<PathBuf>) -> HashSet<PathBuf> {
         for tgt in p.iter() {
             if tgt.is_symlink() {
@@ -161,12 +220,12 @@ impl TintProcessor {
     }
 
     // Start tint processor
-    pub fn start(&self) -> Result<(), Error> {
+    pub fn start(&mut self) -> Result<(), Error> {
         self.switch_root()?;
 
         // Bail-out if the image is already processed
         if self.lockfile.exists() {
-            return Err(Error::new(std::io::ErrorKind::AlreadyExists, "This container seems already tinted."));
+            return Err(Error::new(ErrorKind::AlreadyExists, "This container seems already tinted."));
         }
 
         // Run pre-hook, if any
@@ -255,11 +314,16 @@ impl TintProcessor {
             }
             ContentFormatter::new(&paths).set_removed(&p).set_bundled_packages(self.profile.get_bundled_packages()).format();
         } else {
-            // Run post-hook (doesn't affect changes apply)
-            if self.profile.has_post_hook() {
-                Self::call_script(self.profile.get_post_hook())?;
+            if self.copy_to.is_some() {
+                self.into_archive(&paths)?;
+            } else {
+                // Erase mode
+                if self.profile.has_post_hook() {
+                    // Run post-hook (doesn't affect changes apply)
+                    Self::call_script(self.profile.get_post_hook())?;
+                }
+                self.apply_changes(p)?;
             }
-            self.apply_changes(p)?;
         }
 
         Ok(())

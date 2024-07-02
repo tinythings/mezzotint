@@ -74,6 +74,12 @@ pub fn cli(version: &'static str) -> Command {
                 .required_unless_present_any(["help", "version"])
                 .help("Root filesystem, e.g. mountpoint of an image")
         )
+        .arg(
+            Arg::new("copy")
+                .short('c')
+                .long("copy")
+                .help("Collect all library dependencies of a target executable,\nand copy everything to a specified directory.")
+        )
 
         // Filters
         .next_help_heading("Filters")

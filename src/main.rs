@@ -100,6 +100,7 @@ fn get_profile(mut cli: Command, params: &ArgMatches) -> Profile {
 
 /// Main
 fn main() -> Result<(), std::io::Error> {
+    let default_empty = String::from("");
     let args: Vec<String> = env::args().collect();
     let mut cli = clidef::cli(VERSION);
 
@@ -151,6 +152,7 @@ fn main() -> Result<(), std::io::Error> {
         .set_profile(get_profile(cli, &params))
         .set_dry_run(params.get_flag("dry-run"))
         .set_autodeps(params.get_one::<String>("autodeps").unwrap().to_string())
+        .copy_to(params.get_one::<String>("copy").unwrap_or_else(|| &default_empty))?
         .start()
     {
         log::error!("{}", err);
