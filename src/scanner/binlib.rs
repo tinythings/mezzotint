@@ -51,7 +51,7 @@ impl Scanner for ElfScanner {
     }
 
     /// Dummy
-    fn contents(&mut self, pkgname: String) -> Result<ScannerResult, std::io::Error> {
+    fn contents(&mut self, _pkgname: String) -> Result<ScannerResult, std::io::Error> {
         Err(std::io::Error::new(std::io::ErrorKind::Unsupported, ""))
     }
 }
