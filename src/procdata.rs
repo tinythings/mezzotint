@@ -179,7 +179,7 @@ impl TintProcessor {
 
         // Cleanup
         fs::remove_dir_all(tmpdir)?;
-        info!("Package archive has been created at {:?}", self.root.join(archname.trim_start_matches("/")));
+        info!("Package archive has been created at {:?}", self.root.join(archname.trim_start_matches('/')));
 
         Ok(())
     }
