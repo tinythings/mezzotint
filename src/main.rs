@@ -152,7 +152,7 @@ fn main() -> Result<(), std::io::Error> {
         .set_profile(get_profile(cli, &params))
         .set_dry_run(params.get_flag("dry-run"))
         .set_autodeps(params.get_one::<String>("autodeps").unwrap().to_string())
-        .copy_to(params.get_one::<String>("copy").unwrap_or_else(|| &default_empty))?
+        .copy_to(params.get_one::<String>("copy").unwrap_or(&default_empty))?
         .start()
     {
         log::error!("{}", err);
