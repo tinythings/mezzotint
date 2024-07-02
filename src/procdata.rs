@@ -167,7 +167,7 @@ impl TintProcessor {
                 fs::create_dir_all(dst.parent().unwrap())?;
             }
 
-            fs::copy(&src, &dst)?;
+            fs::copy(src, dst)?;
             info!("Archiving {:?}", src);
         }
 
