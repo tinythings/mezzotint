@@ -28,7 +28,7 @@ impl ScannerResult {
     /// Returns package total size on the disk
     pub fn get_size(&mut self) -> i128 {
         // Lazy size scanner, in some cases this is not needed.
-        if self.paths.len() > 0 && self.size == 0 {
+        if !self.paths.is_empty() && self.size == 0 {
             for p in &self.paths {
                 if let Ok(s) = p.as_path().size_on_disk() {
                     self.size += s as i128;

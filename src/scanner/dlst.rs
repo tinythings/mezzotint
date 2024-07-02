@@ -41,7 +41,7 @@ impl<'a> ContentFormatter<'a> {
 
     /// Set known bundled packages from the profile, when creating system-bound AppBundle
     pub(crate) fn set_bundled_packages(&mut self, bp: &'a Vec<String>) -> &mut Self {
-        if bp.len() == 0 {
+        if !bp.is_empty() {
             return self;
         }
         self.bundled_packages = Some(bp);
@@ -73,7 +73,7 @@ impl<'a> ContentFormatter<'a> {
         // XXX: Depends on the system
         let mut pt: Box<dyn PkgFileTrace> = Box::new(DebPkgFileTrace::new());
 
-        self.fs_data.into_iter().for_each(|p: &PathBuf| {
+        self.fs_data.iter().for_each(|p: &PathBuf| {
             if let Some(pkg) = pt.trace(p.clone()) {
                 pkgs.insert(pkg);
             }
@@ -192,7 +192,7 @@ impl<'a> ContentFormatter<'a> {
             pkgs.join(", ")
         );
 
-        if s_pkgs.len() > 0 {
+        if !s_pkgs.is_empty() {
             println!(
                 "{} {} {} {}\n  {}\n",
                 s_pkgs.len().to_string().bright_yellow(),
