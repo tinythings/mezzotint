@@ -36,19 +36,19 @@ impl DeltaFinder {
 
     /// Test if a given path has a carbon copy on the current system
     /// NOTE: DeltaFinder is looking for either a current system or a mounted fs!
-    pub fn maybe_dupe(self, f: PathBuf) -> bool {
+    pub fn maybe_dupe(&self, f: PathBuf) -> bool {
         let mut is_dupe = false;
         is_dupe
     }
 
-    fn is_same(self) -> bool {
+    fn is_same(&self) -> bool {
         false
     }
 
-    fn belongs_to(self) {}
+    fn belongs_to(&self) {}
 
     /// Get collected duplicates
-    pub fn get_dupes(self) -> Vec<PathBuf> {
+    pub fn get_dupes(&self) -> Vec<PathBuf> {
         self.dupes.to_owned()
     }
 }
