@@ -118,7 +118,7 @@ impl<'a> ContentFormatter<'a> {
             let (dname, mut fname) = self.dn(p);
 
             if self.last_dir != dname {
-                self.last_dir = dname.to_owned();
+                dname.clone_into(&mut self.last_dir);
                 t_leaf = "".to_string();
                 println!("\n{}", self.last_dir.bright_blue().bold());
                 println!("{}", "──┬──┄┄╌╌ ╌  ╌".blue());

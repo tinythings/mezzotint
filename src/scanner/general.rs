@@ -7,6 +7,7 @@ pub(crate) trait Scanner {
     fn scan(&mut self, pth: PathBuf) -> ScannerResult;
 
     /// Add packages to be excluded from the scan
+    #[allow(dead_code)]
     fn exclude(&mut self, pkgs: Vec<String>) -> &mut Self;
 
     fn contents(&mut self, pkgname: String) -> Result<ScannerResult, std::io::Error>;
@@ -76,7 +77,7 @@ impl ScannerCommons {
         if self.elfrd_p.is_empty() {
             for p in &self.elfrd_paths {
                 if fs::metadata(p).is_ok() {
-                    self.elfrd_p = p.to_owned();
+                    p.clone_into(&mut self.elfrd_p);
                     break;
                 }
             }
