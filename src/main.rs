@@ -15,7 +15,7 @@ use std::{
     process,
 };
 
-static VERSION: &str = "0.1";
+static VERSION: &str = "0.2";
 static LOGGER: logger::STDOUTLogger = logger::STDOUTLogger;
 
 /// Get flag from the params and return inverted if requested
